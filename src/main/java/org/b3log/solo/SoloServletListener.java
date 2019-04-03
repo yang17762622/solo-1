@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -39,7 +39,6 @@ import org.b3log.solo.event.B3ArticleUpdater;
 import org.b3log.solo.event.B3CommentSender;
 import org.b3log.solo.event.PluginRefresher;
 import org.b3log.solo.model.Option;
-import org.b3log.solo.model.Skin;
 import org.b3log.solo.processor.InitCheckHandler;
 import org.b3log.solo.processor.PermalinkHandler;
 import org.b3log.solo.processor.console.*;
@@ -58,7 +57,8 @@ import javax.servlet.http.HttpSessionEvent;
  * Solo Servlet listener.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.10.0.10, Feb 16, 2019
+ * @author <a href="http://vanessa.b3log.org">Vanessa</a>
+ * @version 1.11.0.14, Mar 31, 2019
  * @since 0.3.1
  */
 public final class SoloServletListener extends AbstractServletListener {
@@ -71,7 +71,7 @@ public final class SoloServletListener extends AbstractServletListener {
     /**
      * Solo version.
      */
-    public static final String VERSION = "3.2.0";
+    public static final String VERSION = "3.5.0";
 
     /**
      * Bean manager.
@@ -88,6 +88,14 @@ public final class SoloServletListener extends AbstractServletListener {
         beanManager = BeanManager.getInstance();
         routeConsoleProcessors();
         Stopwatchs.start("Context Initialized");
+
+        final Latkes.RuntimeDatabase runtimeDatabase = Latkes.getRuntimeDatabase();
+        final Latkes.RuntimeMode runtimeMode = Latkes.getRuntimeMode();
+        final String jdbcUsername = Latkes.getLocalProperty("jdbc.username");
+        final String jdbcURL = Latkes.getLocalProperty("jdbc.URL");
+
+        LOGGER.log(Level.INFO, "Solo is booting [pid=" + Solos.currentPID() + ", runtimeDatabase=" + runtimeDatabase + ", runtimeMode=" + runtimeMode +
+                ", jdbc.username=" + jdbcUsername + ", jdbc.URL=" + jdbcURL + "]");
 
         validateSkin();
 
@@ -180,10 +188,9 @@ public final class SoloServletListener extends AbstractServletListener {
     }
 
     /**
-     * Loads preference.
+     * Loads skin.
      * <p>
-     * Loads preference from repository, loads skins from skin directory then sets it into preference if the skins
-     * changed.
+     * Loads skin from repository, loads skins from skin directory then sets it into preference if the skins changed.
      * </p>
      */
     private void loadPreference() {
@@ -192,15 +199,15 @@ public final class SoloServletListener extends AbstractServletListener {
         LOGGER.debug("Loading preference....");
 
         final OptionQueryService optionQueryService = beanManager.getReference(OptionQueryService.class);
-        JSONObject preference;
+        JSONObject skin;
         try {
-            preference = optionQueryService.getPreference();
-            if (null == preference) {
+            skin = optionQueryService.getSkin();
+            if (null == skin) {
                 return;
             }
 
-            final PreferenceMgmtService preferenceMgmtService = beanManager.getReference(PreferenceMgmtService.class);
-            preferenceMgmtService.loadSkins(preference);
+            final SkinMgmtService skinMgmtService = beanManager.getReference(SkinMgmtService.class);
+            skinMgmtService.loadSkins(skin);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, e.getMessage(), e);
 
@@ -247,24 +254,21 @@ public final class SoloServletListener extends AbstractServletListener {
     private void resolveSkinDir(final HttpServletRequest httpServletRequest) {
         String skin = Skins.getSkinDirNameFromCookie(httpServletRequest);
         if (StringUtils.isBlank(skin)) {
-            try {
-                final InitService initService = beanManager.getReference(InitService.class);
-                if (initService.isInited()) {
-                    final OptionQueryService optionQueryService = beanManager.getReference(OptionQueryService.class);
-                    final JSONObject preference = optionQueryService.getPreference();
-                    if (null != preference) {
-                        skin = preference.getString(Skin.SKIN_DIR_NAME);
-                    }
+            final OptionQueryService optionQueryService = beanManager.getReference(OptionQueryService.class);
+            final JSONObject skinOpt = optionQueryService.getSkin();
+            if (Solos.isMobile(httpServletRequest)) {
+                if (null != skinOpt) {
+                    skin = skinOpt.optString(Option.ID_C_MOBILE_SKIN_DIR_NAME);
+                } else {
+                    skin = Option.DefaultPreference.DEFAULT_MOBILE_SKIN_DIR_NAME;
                 }
-            } catch (final Exception e) {
-                LOGGER.log(Level.ERROR, "Resolves skin failed", e);
+            } else {
+                if (null != skinOpt) {
+                    skin = skinOpt.optString(Option.ID_C_SKIN_DIR_NAME);
+                } else {
+                    skin = Option.DefaultPreference.DEFAULT_SKIN_DIR_NAME;
+                }
             }
-        }
-        if (StringUtils.isBlank(skin)) {
-            skin = Option.DefaultPreference.DEFAULT_SKIN_DIR_NAME;
-        }
-        if (Solos.isMobile(httpServletRequest)) {
-            skin = Solos.MOBILE_SKIN;
         }
 
         httpServletRequest.setAttribute(Keys.TEMAPLTE_DIR_NAME, skin);
@@ -328,6 +332,7 @@ public final class SoloServletListener extends AbstractServletListener {
                 "/admin-draft-list.do",
                 "/admin-user-list.do",
                 "/admin-category-list.do",
+                "/admin-theme-list.do",
                 "/admin-plugin-list.do",
                 "/admin-main.do",
                 "/admin-about.do"}, adminConsole::showAdminFunctions);
@@ -389,13 +394,20 @@ public final class SoloServletListener extends AbstractServletListener {
         DispatcherServlet.get("/console/preference/", preferenceConsole::getPreference);
         DispatcherServlet.put("/console/preference/", preferenceConsole::updatePreference);
 
+        final SkinConsole skinConsole = beanManager.getReference(SkinConsole.class);
+        DispatcherServlet.get("/console/skin", skinConsole::getSkin);
+        DispatcherServlet.put("/console/skin", skinConsole::updateSkin);
+
         final RepairConsole repairConsole = beanManager.getReference(RepairConsole.class);
         DispatcherServlet.get("/fix/restore-signs", repairConsole::restoreSigns);
 
         final TagConsole tagConsole = beanManager.getReference(TagConsole.class);
         DispatcherServlet.get("/console/tags", tagConsole::getTags);
         DispatcherServlet.get("/console/tag/unused", tagConsole::getUnusedTags);
-        DispatcherServlet.delete("/console/tag/unused", tagConsole::removeUnusedTags);
+
+        final OtherConsole otherConsole = beanManager.getReference(OtherConsole.class);
+        DispatcherServlet.delete("/console/archive/unused", otherConsole::removeUnusedArchives);
+        DispatcherServlet.delete("/console/tag/unused", otherConsole::removeUnusedTags);
 
         final UserConsole userConsole = beanManager.getReference(UserConsole.class);
         DispatcherServlet.put("/console/user/", userConsole::updateUser);

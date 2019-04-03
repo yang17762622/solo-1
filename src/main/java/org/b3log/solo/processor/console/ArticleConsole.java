@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * Article console request processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.0.0, Feb 10, 2019
+ * @version 1.2.0.1, Mar 29, 2019
  * @since 0.4.0
  */
 @Singleton
@@ -491,6 +491,9 @@ public class ArticleConsole {
                 return;
             }
 
+            // 打印请求日志，如果发生特殊情况丢失数据，至少还可以根据日志寻回内容
+            LOGGER.log(Level.INFO, "Updates an article request [" + requestJSONObject.toString() + "]");
+
             articleMgmtService.updateArticle(requestJSONObject);
 
             ret.put(Keys.MSG, langPropsService.get("updateSuccLabel"));
@@ -500,7 +503,7 @@ public class ArticleConsole {
 
             final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+            jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
     }
 
@@ -547,6 +550,9 @@ public class ArticleConsole {
             final JSONObject currentUser = Solos.getCurrentUser(context.getRequest(), context.getResponse());
             requestJSONObject.getJSONObject(Article.ARTICLE).put(Article.ARTICLE_AUTHOR_ID, currentUser.getString(Keys.OBJECT_ID));
 
+            // 打印请求日志，如果发生特殊情况丢失数据，至少还可以根据日志寻回内容
+            LOGGER.log(Level.INFO, "Adds an article request [" + requestJSONObject.toString() + "]");
+
             final String articleId = articleMgmtService.addArticle(requestJSONObject);
             ret.put(Keys.OBJECT_ID, articleId);
             ret.put(Keys.MSG, langPropsService.get("addSuccLabel"));
@@ -558,7 +564,7 @@ public class ArticleConsole {
 
             final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+            jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
     }
 }

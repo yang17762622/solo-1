@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -36,7 +36,6 @@ import org.b3log.latke.util.Paginator;
 import org.b3log.solo.SoloServletListener;
 import org.b3log.solo.model.Common;
 import org.b3log.solo.model.Option;
-import org.b3log.solo.model.Skin;
 import org.b3log.solo.service.DataModelService;
 import org.b3log.solo.service.InitService;
 import org.b3log.solo.service.OptionQueryService;
@@ -56,7 +55,8 @@ import java.util.Map;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://hacpai.com/member/DASHU">DASHU</a>
- * @version 1.2.4.15, Feb 11, 2019
+ * @author <a href="https://vanessa.b3log.org">Vanessa</a>
+ * @version 1.2.4.16, Mar 19, 2019
  * @since 0.3.1
  */
 @RequestProcessor
@@ -116,11 +116,19 @@ public class IndexProcessor {
             // 前台皮肤切换 https://github.com/b3log/solo/issues/12060
             String specifiedSkin = Skins.getSkinDirName(context);
             if (StringUtils.isBlank(specifiedSkin)) {
-                specifiedSkin = preference.optString(Option.ID_C_SKIN_DIR_NAME);
+                final JSONObject skinOpt = optionQueryService.getSkin();
+                specifiedSkin = Solos.isMobile(request) ?
+                        skinOpt.optString(Option.ID_C_MOBILE_SKIN_DIR_NAME) :
+                        skinOpt.optString(Option.ID_C_SKIN_DIR_NAME);
             }
             request.setAttribute(Keys.TEMAPLTE_DIR_NAME, specifiedSkin);
 
-            final Cookie cookie = new Cookie(Skin.SKIN, specifiedSkin);
+            Cookie cookie;
+            if (!Solos.isMobile(request)) {
+                cookie = new Cookie(Common.COOKIE_NAME_SKIN, specifiedSkin);
+            } else {
+                cookie = new Cookie(Common.COOKIE_NAME_MOBILE_SKIN, specifiedSkin);
+            }
             cookie.setMaxAge(60 * 60); // 1 hour
             cookie.setPath("/");
             response.addCookie(cookie);
@@ -129,6 +137,8 @@ public class IndexProcessor {
 
             dataModelService.fillIndexArticles(context, dataModel, currentPageNum, preference);
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
 
             dataModel.put(Pagination.PAGINATION_CURRENT_PAGE_NUM, currentPageNum);
             final int previousPageNum = currentPageNum > 1 ? currentPageNum - 1 : 0;
@@ -165,7 +175,7 @@ public class IndexProcessor {
             referer = Latkes.getServePath();
         }
 
-        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "start.ftl");
+        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "common-template/start.ftl");
         final Map<String, Object> dataModel = renderer.getDataModel();
         final HttpServletRequest request = context.getRequest();
         final Map<String, String> langs = langPropsService.getAll(Locales.getLocale(request));
@@ -176,7 +186,8 @@ public class IndexProcessor {
         dataModel.put(Common.REFERER, referer);
         Keys.fillRuntime(dataModel);
         dataModelService.fillMinified(dataModel);
-
+        dataModelService.fillFaviconURL(dataModel, optionQueryService.getPreference());
+        dataModelService.fillUsite(dataModel);
         Solos.addGoogleNoIndex(context);
     }
 
@@ -203,13 +214,15 @@ public class IndexProcessor {
     @RequestProcessing(value = "/kill-browser", method = HttpMethod.GET)
     public void showKillBrowser(final RequestContext context) {
         final HttpServletRequest request = context.getRequest();
-        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "kill-browser.ftl");
+        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "common-template/kill-browser.ftl");
         final Map<String, Object> dataModel = renderer.getDataModel();
         try {
             final Map<String, String> langs = langPropsService.getAll(Locales.getLocale(request));
             dataModel.putAll(langs);
             final JSONObject preference = optionQueryService.getPreference();
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
             Keys.fillServer(dataModel);
             Keys.fillRuntime(dataModel);
             dataModelService.fillMinified(dataModel);

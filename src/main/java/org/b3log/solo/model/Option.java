@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -26,7 +26,7 @@ import org.json.JSONObject;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://github.com/hzchendou">hzchendou</a>
- * @version 1.5.0.4, Mar 3, 2019
+ * @version 1.6.0.0, Mar 29, 2019
  * @since 0.6.0
  */
 public final class Option {
@@ -52,6 +52,21 @@ public final class Option {
     public static final String OPTION_CATEGORY = "optionCategory";
 
     // oId constants
+    /**
+     * Key of hljs theme. 在设置中可选择语法高亮主题 https://github.com/b3log/solo/issues/12722
+     */
+    public static final String ID_C_HLJS_THEME = "hljsTheme";
+
+    /**
+     * Key of enable syn GitHub. 博文定时同步 GitHub 仓库 https://github.com/b3log/solo/issues/12676
+     */
+    public static final String ID_C_SYNC_GITHUB = "syncGitHub";
+
+    /**
+     * Key of favicon URL.
+     */
+    public static final String ID_C_FAVICON_URL = "faviconURL";
+
     /**
      * Key of custom vars.
      */
@@ -203,19 +218,14 @@ public final class Option {
     public static final String ID_C_FEED_OUTPUT_CNT = "feedOutputCnt";
 
     /**
-     * Key of skins.
-     */
-    public static final String ID_C_SKINS = "skins";
-
-    /**
      * Key of skin dir name.
      */
     public static final String ID_C_SKIN_DIR_NAME = "skinDirName";
 
     /**
-     * Key of skin name.
+     * Key of mobile skin dir name.
      */
-    public static final String ID_C_SKIN_NAME = "skinName";
+    public static final String ID_C_MOBILE_SKIN_DIR_NAME = "mobileSkinDirName";
 
     /**
      * Key of footer content.
@@ -232,6 +242,11 @@ public final class Option {
      */
     public static final String ID_C_GITHUB_REPOS = "githubRepos";
 
+    /**
+     * Key of USite.
+     */
+    public static final String ID_C_USITE = "usite";
+
     // Category constants
     /**
      * Category - Preference.
@@ -247,6 +262,16 @@ public final class Option {
      * Category - GitHub.
      */
     public static final String CATEGORY_C_GITHUB = "github";
+
+    /**
+     * Category - HacPai.
+     */
+    public static final String CATEGORY_C_HACPAI = "hacpai";
+
+    /**
+     * Category - Skin.
+     */
+    public static final String CATEGORY_C_SKIN = "skin";
 
     //// Transient ////
     /**
@@ -269,10 +294,25 @@ public final class Option {
      * Default preference.
      *
      * @author <a href="http://88250.b3log.org">Liang Ding</a>
-     * @version 2.2.0.1, Feb 17, 2019
+     * @version 2.3.0.0, Mar 29, 2019
      * @since 0.3.1
      */
     public static final class DefaultPreference {
+
+        /**
+         * Default hljs theme.
+         */
+        public static final String DEFAULT_HLJS_THEME = "atom-one-light";
+
+        /**
+         * Default enable sync GitHub.
+         */
+        public static final String DEFAULT_SYNC_GITHUB = "false";
+
+        /**
+         * Default favicon URL.
+         */
+        public static final String DEFAULT_FAVICON_URL = "https://static.b3log.org/images/brand/solo-32.png";
 
         /**
          * Default custom vars.
@@ -318,6 +358,11 @@ public final class Option {
          * Default skin directory name.
          */
         public static final String DEFAULT_SKIN_DIR_NAME = "Pinghsu";
+
+        /**
+         * Default mobile skin directory name.
+         */
+        public static final String DEFAULT_MOBILE_SKIN_DIR_NAME = "Pinghsu";
 
         /**
          * Default language.

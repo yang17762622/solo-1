@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -51,7 +51,7 @@ import java.util.Set;
  * Category console request processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.3.3, Dec 10, 2018
+ * @version 1.1.3.4, Mar 29, 2019
  * @since 2.0.0
  */
 @RequestProcessor
@@ -347,7 +347,7 @@ public class CategoryConsole {
 
             final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+            jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
     }
 
@@ -476,7 +476,7 @@ public class CategoryConsole {
 
             final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+            jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
     }
 

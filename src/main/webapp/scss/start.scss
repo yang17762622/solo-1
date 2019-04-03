@@ -1,6 +1,6 @@
-/**
+/*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +20,11 @@
 *
 * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
 * @author <a href="http://88250.b3log.org">Liang Ding</a>
-* @version 2.0.0.1, Feb 26, 2019
+* @version 2.0.0.4, Mar 17, 2019
 */
 
 @import "reset";
-@import "reset-content";
+@import "vditor/src/assets/scss/classic";
 
 /* reset */
 button {
@@ -127,17 +127,6 @@ input[type=text]:focus {
     flex: 1;
 }
 
-.logo {
-    width: 217px;
-    text-align: center;
-    align-self: center;
-}
-
-.logo img {
-    height: 128px;
-    width: 128px;
-}
-
 .footerWrapper {
     background-color: #FFFFFF;
     border-top: 1px solid #E6E5D9;
@@ -168,7 +157,7 @@ input[type=text]:focus {
         float: right;
         margin: -280px 0 0 0;
     }
-    .content-reset {
+    .vditor-reset {
         margin: 10px;
     }
 }
@@ -238,21 +227,19 @@ input[type=text]:focus {
 
 .github__check {
     font-size: 12px;
-    display: flex;
-    width: 80%;
+    display: inline-block;
     margin: 10px auto 0;
     align-items: center;
     line-height: 20px;
     color: #999;
-}
-
-.github__check a {
-    color: #999;
-    text-decoration: underline;
-}
-
-.github__check input {
-    width: auto;
+    a {
+        color: #999;
+        text-decoration: underline;
+    }
+    input {
+        width: auto;
+        margin-right: 5px;
+    }
 }
 
 /* start search */
@@ -275,7 +262,7 @@ input[type=text]:focus {
 }
 
 .search__header a {
-    line-height: 44px;
+    line-height: 32px;
 }
 
 .search__input {
@@ -286,12 +273,12 @@ input[type=text]:focus {
 .search__input input {
     margin: 0 10px 0 20px;
     width: 523px;
-    height: 44px;
-    line-height: 44px;
+    height: 32px;
+    line-height: 32px;
 }
 
 .search__input button {
-    height: 44px;
+    height: 32px;
     margin: 0;
 }
 

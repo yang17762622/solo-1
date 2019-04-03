@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -224,6 +224,8 @@ public class ArticleProcessor {
 
         Keys.fillRuntime(dataModel);
         dataModelService.fillMinified(dataModel);
+        dataModelService.fillFaviconURL(dataModel, preference);
+        dataModelService.fillUsite(dataModel);
     }
 
     /**
@@ -623,6 +625,8 @@ public class ArticleProcessor {
             prepareShowAuthorArticles(pageNums, dataModel, pageCount, currentPageNum, articles, author);
             final HttpServletResponse response = context.getResponse();
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
             Skins.fillLangs(preference.optString(Option.ID_C_LOCALE_STRING), (String) context.attr(Keys.TEMAPLTE_DIR_NAME), dataModel);
 
             statisticMgmtService.incBlogViewCount(context, response);
@@ -678,6 +682,8 @@ public class ArticleProcessor {
             prepareShowArchiveArticles(preference, dataModel, articles, currentPageNum, pageCount, archiveDateString, archiveDate);
             final HttpServletResponse response = context.getResponse();
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
 
             statisticMgmtService.incBlogViewCount(context, response);
         } catch (final Exception e) {
@@ -716,16 +722,13 @@ public class ArticleProcessor {
             }
 
             LOGGER.log(Level.TRACE, "Article [title={0}]", article.getString(Article.ARTICLE_TITLE));
-
             articleQueryService.markdown(article);
 
             article.put(Article.ARTICLE_T_CREATE_DATE, new Date(article.optLong(Article.ARTICLE_CREATED)));
             article.put(Article.ARTICLE_T_UPDATE_DATE, new Date(article.optLong(Article.ARTICLE_UPDATED)));
-
             // For <meta name="description" content="${article.articleAbstract}"/>
             final String metaDescription = Jsoup.parse(article.optString(Article.ARTICLE_ABSTRACT)).text();
             article.put(Article.ARTICLE_ABSTRACT, metaDescription);
-
             if (preference.getBoolean(Option.ID_C_ENABLE_ARTICLE_UPDATE_HINT)) {
                 article.put(Common.HAS_UPDATED, articleQueryService.hasUpdated(article));
             } else {
@@ -734,23 +737,21 @@ public class ArticleProcessor {
 
             final JSONObject author = articleQueryService.getAuthor(article);
             final String authorName = author.getString(User.USER_NAME);
-
             article.put(Common.AUTHOR_NAME, authorName);
             final String authorId = author.getString(Keys.OBJECT_ID);
-
             article.put(Common.AUTHOR_ID, authorId);
             article.put(Common.AUTHOR_ROLE, author.getString(User.USER_ROLE));
             final String userAvatar = author.optString(UserExt.USER_AVATAR);
             article.put(Common.AUTHOR_THUMBNAIL_URL, userAvatar);
-
             dataModelService.fillCategory(article);
-
             final Map<String, Object> dataModel = renderer.getDataModel();
 
             prepareShowArticle(preference, dataModel, article);
 
             final HttpServletResponse response = context.getResponse();
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
             Skins.fillLangs(preference.optString(Option.ID_C_LOCALE_STRING), (String) context.attr(Keys.TEMAPLTE_DIR_NAME), dataModel);
 
             if (!StatisticMgmtService.hasBeenServed(context, response)) {

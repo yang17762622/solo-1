@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,6 @@
 package org.b3log.solo.processor.console;
 
 import jodd.io.ZipUtil;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -41,7 +40,9 @@ import org.b3log.latke.servlet.renderer.AbstractFreeMarkerRenderer;
 import org.b3log.latke.util.Execs;
 import org.b3log.latke.util.Strings;
 import org.b3log.solo.SoloServletListener;
-import org.b3log.solo.model.*;
+import org.b3log.solo.model.Common;
+import org.b3log.solo.model.Option;
+import org.b3log.solo.model.UserExt;
 import org.b3log.solo.service.DataModelService;
 import org.b3log.solo.service.ExportService;
 import org.b3log.solo.service.OptionQueryService;
@@ -65,7 +66,7 @@ import java.util.*;
  * Admin console render processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.0.12, Mar 10, 2019
+ * @version 1.7.0.13, Mar 19, 2019
  * @since 0.4.1
  */
 @Singleton
@@ -142,12 +143,12 @@ public class AdminConsole {
             dataModel.put(Common.YEAR, String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
             dataModel.put(Option.ID_C_ARTICLE_LIST_DISPLAY_COUNT, preference.getInt(Option.ID_C_ARTICLE_LIST_DISPLAY_COUNT));
             dataModel.put(Option.ID_C_ARTICLE_LIST_PAGINATION_WINDOW_SIZE, preference.getInt(Option.ID_C_ARTICLE_LIST_PAGINATION_WINDOW_SIZE));
-            dataModel.put(Option.ID_C_LOCALE_STRING, preference.getString(Option.ID_C_LOCALE_STRING));
-            dataModel.put(Skin.SKIN_DIR_NAME, preference.getString(Skin.SKIN_DIR_NAME));
+            final JSONObject skin = optionQueryService.getSkin();
+            dataModel.put(Option.CATEGORY_C_SKIN, skin.optString(Option.ID_C_SKIN_DIR_NAME));
             Keys.fillRuntime(dataModel);
             dataModelService.fillMinified(dataModel);
             // 使用 Marked 时代码高亮问题 https://github.com/b3log/solo/issues/12614
-            dataModel.put(Common.MARKED_AVAILABLE, Markdowns.MARKED_AVAILABLE);
+            dataModel.put(Common.MARKED_AVAILABLE, Markdowns.MARKDOWN_HTTP_AVAILABLE);
             // 内置 HTTPS+CDN 文件存储 https://github.com/b3log/solo/issues/12556
             dataModel.put(Common.UPLOAD_TOKEN, "");
             dataModel.put(Common.UPLOAD_URL, "");
@@ -158,6 +159,9 @@ public class AdminConsole {
                 dataModel.put(Common.UPLOAD_URL, upload.optString(Common.UPLOAD_URL));
                 dataModel.put(Common.UPLOAD_MSG, upload.optString(Common.UPLOAD_MSG));
             }
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
+            dataModelService.fillCommon(context, dataModel, preference);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Admin index render failed", e);
         }
@@ -428,11 +432,11 @@ public class AdminConsole {
 
             final JSONObject result = exportService.exportHexoMDs();
             final List<JSONObject> posts = (List<JSONObject>) result.opt("posts");
-            exportHexoMd(posts, postDir.getPath());
+            exportService.exportHexoMd(posts, postDir.getPath());
             final List<JSONObject> passwords = (List<JSONObject>) result.opt("passwords");
-            exportHexoMd(passwords, passwordDir.getPath());
+            exportService.exportHexoMd(passwords, passwordDir.getPath());
             final List<JSONObject> drafts = (List<JSONObject>) result.opt("drafts");
-            exportHexoMd(drafts, draftDir.getPath());
+            exportService.exportHexoMd(drafts, draftDir.getPath());
 
             final File zipFile = ZipUtil.zip(localFile);
             byte[] zipData;
@@ -471,21 +475,5 @@ public class AdminConsole {
             // There is no plugin for this template, fill ${plugins} with blank.
             dataModel.put(Plugin.PLUGINS, "");
         }
-    }
-
-    private void exportHexoMd(final List<JSONObject> articles, final String dirPath) {
-        articles.forEach(article -> {
-            final String filename = Solos.sanitizeFilename(article.optString("title")) + ".md";
-            final String text = article.optString("front") + "---" + Strings.LINE_SEPARATOR + article.optString("content");
-
-            try {
-                final String date = DateFormatUtils.format(article.optLong("created"), "yyyyMM");
-                final String dir = dirPath + File.separator + date + File.separator;
-                new File(dir).mkdirs();
-                FileUtils.writeStringToFile(new File(dir + filename), text, "UTF-8");
-            } catch (final Exception e) {
-                LOGGER.log(Level.ERROR, "Write markdown file failed", e);
-            }
-        });
     }
 }

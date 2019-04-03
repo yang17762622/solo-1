@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -59,7 +59,7 @@ import static org.b3log.solo.model.Article.ARTICLE_CONTENT;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.7.0.5, Feb 27, 2019
+ * @version 1.7.0.8, Mar 29, 2019
  * @since 0.3.1
  */
 @Service
@@ -538,6 +538,38 @@ public class DataModelService {
     }
 
     /**
+     * Fills favicon URL. 可配置 favicon 图标路径 https://github.com/b3log/solo/issues/12706
+     *
+     * @param dataModel  the specified data model
+     * @param preference the specified preference
+     */
+    public void fillFaviconURL(final Map<String, Object> dataModel, final JSONObject preference) {
+        if (null == preference) {
+            dataModel.put(Common.FAVICON_URL, Option.DefaultPreference.DEFAULT_FAVICON_URL);
+        } else {
+            dataModel.put(Common.FAVICON_URL, preference.optString(Option.ID_C_FAVICON_URL));
+        }
+    }
+
+    /**
+     * Fills usite. 展示站点连接 https://github.com/b3log/solo/issues/12719
+     *
+     * @param dataModel the specified data model
+     */
+    public void fillUsite(final Map<String, Object> dataModel) {
+        try {
+            final JSONObject usiteOpt = optionQueryService.getOptionById(Option.ID_C_USITE);
+            if (null == usiteOpt) {
+                return;
+            }
+
+            dataModel.put(Option.ID_C_USITE, new JSONObject(usiteOpt.optString(Option.OPTION_VALUE)));
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Fills usite failed", e);
+        }
+    }
+
+    /**
      * Fills common parts (header, side and footer).
      *
      * @param context    the specified HTTP servlet request context
@@ -545,8 +577,7 @@ public class DataModelService {
      * @param preference the specified preference
      * @throws ServiceException service exception
      */
-    public void fillCommon(final RequestContext context, final Map<String, Object> dataModel, final JSONObject preference)
-            throws ServiceException {
+    public void fillCommon(final RequestContext context, final Map<String, Object> dataModel, final JSONObject preference) throws ServiceException {
         fillSide(context, dataModel, preference);
         fillBlogHeader(context, dataModel, preference);
         fillBlogFooter(context, dataModel, preference);
@@ -568,7 +599,13 @@ public class DataModelService {
         dataModel.put("customVars", customVars);
 
         // 使用 Marked 时代码高亮问题 https://github.com/b3log/solo/issues/12614
-        dataModel.put(Common.MARKED_AVAILABLE, Markdowns.MARKED_AVAILABLE);
+        dataModel.put(Common.MARKED_AVAILABLE, Markdowns.MARKDOWN_HTTP_AVAILABLE);
+
+        String hljsTheme = preference.optString(Option.ID_C_HLJS_THEME);
+        if (StringUtils.isBlank(hljsTheme)) {
+            hljsTheme = Option.DefaultPreference.DEFAULT_HLJS_THEME;
+        }
+        dataModel.put(Option.ID_C_HLJS_THEME, hljsTheme);
     }
 
     /**
@@ -670,7 +707,7 @@ public class DataModelService {
             final JSONObject admin = userRepository.getAdmin();
             dataModel.put(Common.ADMIN_USER, admin);
             final String skinDirName = (String) context.attr(Keys.TEMAPLTE_DIR_NAME);
-            dataModel.put(Skin.SKIN_DIR_NAME, skinDirName);
+            dataModel.put(Option.ID_C_SKIN_DIR_NAME, skinDirName);
             Keys.fillRuntime(dataModel);
             fillMinified(dataModel);
             fillPageNavigations(dataModel);
@@ -1029,7 +1066,7 @@ public class DataModelService {
         Stopwatchs.start("Gens Top Bar HTML");
 
         try {
-            final Template topBarTemplate = Skins.getTemplate("top-bar.ftl");
+            final Template topBarTemplate = Skins.getTemplate("common-template/top-bar.ftl");
             final StringWriter stringWriter = new StringWriter();
             final Map<String, Object> topBarModel = new HashMap<>();
             final JSONObject currentUser = Solos.getCurrentUser(context.getRequest(), context.getResponse());

@@ -2,7 +2,7 @@
 <!--
 
     Solo - A small and beautiful blogging system written in Java.
-    Copyright (c) 2010-2019, b3log.org & hacpai.com
+    Copyright (c) 2010-present, b3log.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -20,15 +20,13 @@
 -->
 <!--
     Description: Static resources definition.
-    Version: 2.8.0.60, Jan 13, 2019
+    Version: 2.8.0.61, Mar 17, 2019
     Author: Liang Ding
     Author: Liyuan Li
 -->
 <static-files>
     <!-- Uses the STANDARD Ant Path Pattern to configure these paths!  -->
 
-    <include path="/favicon.ico"/>
-    <include path="/favicon.png"/>
     <include path="/robots.txt"/>
     <include path="/sw.js"/>
     <include path="/manifest.json"/>

@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,9 +27,9 @@ import org.b3log.latke.logging.Logger;
 import org.b3log.latke.model.Role;
 import org.b3log.latke.model.User;
 import org.b3log.latke.plugin.PluginManager;
-import org.b3log.latke.repository.Query;
 import org.b3log.latke.repository.RepositoryException;
 import org.b3log.latke.repository.Transaction;
+import org.b3log.latke.repository.jdbc.util.Connections;
 import org.b3log.latke.repository.jdbc.util.JdbcRepositories;
 import org.b3log.latke.repository.jdbc.util.JdbcRepositories.CreateTableResult;
 import org.b3log.latke.service.LangPropsService;
@@ -46,6 +46,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Connection;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,7 @@ import java.util.Set;
  * Solo initialization service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.5.2.30, Mar 2, 2019
+ * @version 1.5.2.33, Apr 2, 2019
  * @since 0.4.0
  */
 @Service
@@ -158,7 +159,7 @@ public class InitService {
         }
 
         try {
-            inited = !optionRepository.getList(new Query()).isEmpty();
+            inited = null != optionRepository.get(Option.ID_C_VERSION);
             if (!inited && !printedInitMsg) {
                 LOGGER.log(Level.WARN, "Solo has not been initialized, please open your browser to init Solo");
                 printedInitMsg = true;
@@ -177,7 +178,7 @@ public class InitService {
      * Initializes database tables.
      */
     public void initTables() {
-        try {
+        try (final Connection chk = Connections.getConnection()) {
             final String tablePrefix = Latkes.getLocalProperty("jdbc.tablePrefix") + "_";
             final boolean userTableExist = JdbcRepositories.existTable(tablePrefix + User.USER);
             final boolean optionTableExist = JdbcRepositories.existTable(tablePrefix + Option.OPTION);
@@ -185,7 +186,7 @@ public class InitService {
                 return;
             }
         } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Check tables failed", e);
+            LOGGER.log(Level.ERROR, "Check tables failed, please make sure database existed and database configuration [jdbc.*] in local.props is correct [msg=" + e.getMessage() + "]");
 
             System.exit(-1);
         }
@@ -225,7 +226,7 @@ public class InitService {
         final Transaction transaction = userRepository.beginTransaction();
         try {
             initStatistic();
-            initPreference(requestJSONObject);
+            initOptions(requestJSONObject);
             initAdmin(requestJSONObject);
             initLink();
             helloWorld();
@@ -286,7 +287,7 @@ public class InitService {
         comment.put(Comment.COMMENT_CONTENT, langPropsService.get("helloWorld.comment.content"));
         comment.put(Comment.COMMENT_ORIGINAL_COMMENT_ID, "");
         comment.put(Comment.COMMENT_ORIGINAL_COMMENT_NAME, "");
-        comment.put(Comment.COMMENT_THUMBNAIL_URL, Solos.GRAVATAR + "59a5e8209c780307dbe9c9ba728073f5??s=60&r=G");
+        comment.put(Comment.COMMENT_THUMBNAIL_URL, "https://img.hacpai.com/avatar/1353745196354_1535379434567.png?imageView2/1/w/64/h/64/q/100");
         comment.put(Comment.COMMENT_CREATED, now);
         comment.put(Comment.COMMENT_ON_ID, articleId);
         comment.put(Comment.COMMENT_ON_TYPE, Article.ARTICLE);
@@ -465,13 +466,31 @@ public class InitService {
     }
 
     /**
-     * Initializes preference.
+     * Initializes options.
      *
      * @param requestJSONObject the specified json object
      * @throws Exception exception
      */
-    private void initPreference(final JSONObject requestJSONObject) throws Exception {
+    private void initOptions(final JSONObject requestJSONObject) throws Exception {
         LOGGER.debug("Initializing preference....");
+
+        final JSONObject hljsThemeOpt = new JSONObject();
+        hljsThemeOpt.put(Keys.OBJECT_ID, Option.ID_C_HLJS_THEME);
+        hljsThemeOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
+        hljsThemeOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_HLJS_THEME);
+        optionRepository.add(hljsThemeOpt);
+
+        final JSONObject syncGitHubOpt = new JSONObject();
+        syncGitHubOpt.put(Keys.OBJECT_ID, Option.ID_C_SYNC_GITHUB);
+        syncGitHubOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
+        syncGitHubOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_SYNC_GITHUB);
+        optionRepository.add(syncGitHubOpt);
+
+        final JSONObject faviconURLOpt = new JSONObject();
+        faviconURLOpt.put(Keys.OBJECT_ID, Option.ID_C_FAVICON_URL);
+        faviconURLOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
+        faviconURLOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_FAVICON_URL);
+        optionRepository.add(faviconURLOpt);
 
         final JSONObject customVarsOpt = new JSONObject();
         customVarsOpt.put(Keys.OBJECT_ID, Option.ID_C_CUSTOM_VARS);
@@ -641,36 +660,17 @@ public class InitService {
         footerContentOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_FOOTER_CONTENT);
         optionRepository.add(footerContentOpt);
 
-        final String skinDirName = DefaultPreference.DEFAULT_SKIN_DIR_NAME;
         final JSONObject skinDirNameOpt = new JSONObject();
         skinDirNameOpt.put(Keys.OBJECT_ID, Option.ID_C_SKIN_DIR_NAME);
-        skinDirNameOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-        skinDirNameOpt.put(Option.OPTION_VALUE, skinDirName);
+        skinDirNameOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_SKIN);
+        skinDirNameOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_SKIN_DIR_NAME);
         optionRepository.add(skinDirNameOpt);
 
-        final String skinName = Latkes.getSkinName(skinDirName);
-        final JSONObject skinNameOpt = new JSONObject();
-        skinNameOpt.put(Keys.OBJECT_ID, Option.ID_C_SKIN_NAME);
-        skinNameOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-        skinNameOpt.put(Option.OPTION_VALUE, skinName);
-        optionRepository.add(skinNameOpt);
-
-        final Set<String> skinDirNames = Skins.getSkinDirNames();
-        final JSONArray skinArray = new JSONArray();
-        for (final String dirName : skinDirNames) {
-            final JSONObject skin = new JSONObject();
-            skinArray.put(skin);
-
-            final String name = Latkes.getSkinName(dirName);
-            skin.put(Skin.SKIN_NAME, name);
-            skin.put(Skin.SKIN_DIR_NAME, dirName);
-        }
-
-        final JSONObject skinsOpt = new JSONObject();
-        skinsOpt.put(Keys.OBJECT_ID, Option.ID_C_SKINS);
-        skinsOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-        skinsOpt.put(Option.OPTION_VALUE, skinArray.toString());
-        optionRepository.add(skinsOpt);
+        final JSONObject mobileSkinDirNameOpt = new JSONObject();
+        mobileSkinDirNameOpt.put(Keys.OBJECT_ID, Option.ID_C_MOBILE_SKIN_DIR_NAME);
+        mobileSkinDirNameOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_SKIN);
+        mobileSkinDirNameOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_MOBILE_SKIN_DIR_NAME);
+        optionRepository.add(mobileSkinDirNameOpt);
 
         LOGGER.info("Initialized preference");
     }

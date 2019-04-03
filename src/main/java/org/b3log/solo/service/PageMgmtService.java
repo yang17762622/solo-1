@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -46,7 +46,7 @@ import java.util.List;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">Vanessa</a>
- * @version 1.1.0.14, Feb 26, 2019
+ * @version 1.1.0.15, Mar 21, 2019
  * @since 0.4.0
  */
 @Service
@@ -118,8 +118,7 @@ public class PageMgmtService {
     private InitService initService;
 
     /**
-     * Refreshes GitHub repos.
-     * 同步 GitHub 仓库 https://github.com/b3log/solo/issues/12514
+     * Refreshes GitHub repos. 同步拉取 GitHub 仓库 https://github.com/b3log/solo/issues/12514
      */
     public void refreshGitHub() {
         if (!initService.isInited()) {
@@ -130,6 +129,10 @@ public class PageMgmtService {
         try {
             admin = userQueryService.getAdmin();
         } catch (final Exception e) {
+            return;
+        }
+
+        if (null == admin) {
             return;
         }
 
@@ -151,6 +154,8 @@ public class PageMgmtService {
             optionMgmtService.addOrUpdateOption(githubReposOpt);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Updates github repos option failed", e);
+
+            return;
         }
 
         final StringBuilder contentBuilder = new StringBuilder();
@@ -189,7 +194,7 @@ public class PageMgmtService {
                 final int maxOrder = pageRepository.getMaxOrder();
                 page.put(Page.PAGE_ORDER, maxOrder + 1);
                 page.put(Page.PAGE_TITLE, "我的开源");
-                page.put(Page.PAGE_OPEN_TARGET, "_blank");
+                page.put(Page.PAGE_OPEN_TARGET, "_self");
                 page.put(Page.PAGE_COMMENTABLE, true);
                 page.put(Page.PAGE_TYPE, "page");
                 page.put(Page.PAGE_PERMALINK, permalink);
@@ -198,6 +203,7 @@ public class PageMgmtService {
                 pageRepository.add(page);
             } else {
                 page.put(Page.PAGE_CONTENT, content);
+                page.put(Page.PAGE_OPEN_TARGET, "_self");
                 pageRepository.update(page.optString(Keys.OBJECT_ID), page);
             }
 

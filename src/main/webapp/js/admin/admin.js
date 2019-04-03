@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,7 +19,7 @@
  * @description index for admin
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.2.0.0, Apr 5, 2018
+ * @version 1.3.0.0, Mar 30, 2019
  */
 
 Util.htmlDecode = function (code) {
@@ -35,20 +35,20 @@ Util.htmlDecode = function (code) {
  */
 Util.proessURL = function (url) {
   if (!/^\w+:\/\//.test(url)) {
-    url = "http://" + url;
+    url = 'http://' + url
   }
-  return url;
+  return url
 }
 
 var Admin = function () {
   this.register = {}
   // 工具栏下的工具
   this.tools = [
-    '#page-list', '#file-list', '#link-list', '#preference',
+    '#page-list', '#theme-list', '#link-list', '#preference',
     '#user-list', '#plugin-list', '#others', '#category-list']
   // 多用户时，一般用户不能使用的功能
   this.adTools = [
-    'link-list', 'preference', 'file-list', 'page-list',
+    'link-list', 'preference', 'theme-list', 'page-list',
     'user-list', 'plugin-list', 'others', 'category-list']
 }
 
@@ -57,7 +57,7 @@ $.extend(Admin.prototype, {
    * @description  登出
    */
   logout: function () {
-    window.location.href = latkeConfig.servePath + '/logout'
+    window.location.href = Label.servePath + '/logout'
   },
   toggleMenu: function () {
     if ($('#tabs').css('left') === '-240px') {
@@ -133,37 +133,14 @@ $.extend(Admin.prototype, {
       return
     }
 
-    if (tab !== 'article') {
-      admin.article.clearDraftTimer()
-    } else if (tab === 'article') {
-      admin.article.autoSaveDraftTimer = setInterval(function () {
-        admin.article._autoSaveToDraft()
-      }, admin.article.AUTOSAVETIME)
-    }
-
     // 离开编辑器时进行提示
     try {
-      // 除更新、发布、取消发布文章，编辑器中无内容外，离开编辑器需进行提示。
-      if (tab !== 'article' && admin.article.isConfirm &&
-        admin.editors.articleEditor.getContent().replace(/\s/g, '') !== ''
-        && admin.article.content !== admin.editors.articleEditor.getContent()) {
-        if (!confirm(Label.editorLeaveLabel)) {
-          window.location.hash = '#article/article'
-          return
-        }
-      }
-      // 不离开编辑器，hash 需变为 "#article/article"，此时不需要做任何处理。
-      if (tab === 'article' && admin.article.isConfirm &&
-        admin.editors.articleEditor.getContent().replace(/\s/g, '') !== ''
-        && admin.article.content !== admin.editors.articleEditor.getContent()) {
-        return
-      }
-    } catch (e) {
-      var $articleContent = $('#articleContent')
-      if ($articleContent.length > 0) {
+      if (admin.editors.articleEditor.getContent) {
+        // 除更新、发布、取消发布文章，编辑器中无内容外，离开编辑器需进行提示。
         if (tab !== 'article' && admin.article.isConfirm &&
-          $articleContent.val().replace(/\s/g, '') !== ''
-          && admin.article.content !== $articleContent.val()) {
+          admin.editors.articleEditor.getContent().replace(/\s/g, '') !== ''
+          && admin.article.content !==
+          admin.editors.articleEditor.getContent()) {
           if (!confirm(Label.editorLeaveLabel)) {
             window.location.hash = '#article/article'
             return
@@ -171,11 +148,14 @@ $.extend(Admin.prototype, {
         }
         // 不离开编辑器，hash 需变为 "#article/article"，此时不需要做任何处理。
         if (tab === 'article' && admin.article.isConfirm &&
-          $articleContent.val().replace(/\s/g, '') !== ''
-          && admin.article.content !== $articleContent.val()) {
+          admin.editors.articleEditor.getContent().replace(/\s/g, '') !== ''
+          && admin.article.content !==
+          admin.editors.articleEditor.getContent()) {
           return
         }
       }
+    } catch (e) {
+      console.log(e)
     }
 
     // clear article
@@ -252,6 +232,21 @@ $.extend(Admin.prototype, {
       }
     }, 6000)
     $('#loadMsg').text('')
+
+    window.onbeforeunload = function (event) {
+      if (window.location.hash === '#article/article') {
+        if (event) {
+          event.returnValue = Label.editorLeaveLabel
+        }
+        return Label.editorLeaveLabel
+      }
+    }
+
+    $(document).ajaxError(function (event, xhr, options, exc) {
+      if (xhr.status !== 200) {
+        $('#tipMsg').text(xhr.status + ': ' + exc)
+      }
+    })
   },
   /**
    * @description tools and article collapse

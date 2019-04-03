@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -45,22 +45,17 @@ $.extend(SoloEditor.prototype, {
       cache: true,
       tab: '\t',
       hint: {
-        emojiPath: latkeConfig.staticServePath + '/js/lib/emojify.js-1.1.0/images/basic'
+        emojiPath: Label.staticServePath + '/js/lib/emojify.js-1.1.0/images/basic'
       },
       preview: {
         delay: 500,
         show: this.conf.previewShow,
-        url: latkeConfig.servePath + '/console/markdown/2html',
-        parse: function (element) {
+        url: Label.servePath + '/console/markdown/2html',
+        parse: function(element) {
           if (element.style.display === 'none') {
             return
           }
-
-          Util.parseMarkdown('content-reset')
-          if (!Label.markedAvailable) {
-            hljs.initHighlighting.called = false
-            hljs.initHighlighting()
-          }
+          Util.parseLanguage()
         },
       },
       upload: {
@@ -77,9 +72,6 @@ $.extend(SoloEditor.prototype, {
         enable: this.conf.resize,
       },
       lang: Label.localeString,
-      classes: {
-        preview: 'content-reset',
-      },
     })
 
     if (typeof this.conf.fun === 'function') {

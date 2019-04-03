@@ -1,7 +1,7 @@
 <#--
 
     Solo - A small and beautiful blogging system written in Java.
-    Copyright (c) 2010-2019, b3log.org & hacpai.com
+    Copyright (c) 2010-present, b3log.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -37,29 +37,19 @@
     </div>
 </#if>
 <script type="text/javascript">
-    if (!window.Page) {
-        const xhrObj = new XMLHttpRequest()
-        xhrObj.open('GET', '${staticServePath}/js/page${miniPostfix}.js?${staticResourceVersion}', false)
-        xhrObj.setRequestHeader('Accept', 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01')
-        xhrObj.send('')
-        const scriptElement = document.createElement('script')
-        scriptElement.type = 'text/javascript'
-        scriptElement.text = xhrObj.responseText
-        document.getElementsByTagName('head')[0].appendChild(scriptElement)
-    }
+    Util.addScript('${staticServePath}/js/page${miniPostfix}.js?${staticResourceVersion}', 'soloPageScript')
     var page = new Page({
         "commentContentCannotEmptyLabel": "${commentContentCannotEmptyLabel}",
-        "langLabel": "${langLabel}",
         "oId": "${oId}",
         "blogHost": "${blogHost}",
         "randomArticles1Label": "${randomArticles1Label}",
         "externalRelevantArticles1Label": "${externalRelevantArticles1Label}"
     });
-    (function () {
+    $(document).ready(function () {
         page.load();
         // emotions
-        page.replaceCommentsEm("#comments .content-reset");
+        page.replaceCommentsEm("#comments .vditor-reset");
         <#nested>
-    })();
+    });
 </script>
 </#macro>

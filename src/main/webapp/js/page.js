@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.1.0.1, Mar 6, 2019
+ * @version 2.2.0.2, Apr 2, 2019
  */
 var Page = function (tips) {
   this.currentCommentId = ''
@@ -28,6 +28,54 @@ var Page = function (tips) {
 }
 
 $.extend(Page.prototype, {
+  share: function () {
+    var $this = $('.article__share')
+    if ($this.length === 0) {
+      return
+    }
+    var $qrCode = $this.find('.item__qr')
+    var shareURL = $this.data('url')
+    var avatarURL = $this.data('avatar')
+    var title = encodeURIComponent($this.data('title') + ' - ' +
+      $this.data('blogtitle'))
+    var url = encodeURIComponent(shareURL)
+
+    var urls = {}
+    urls.tencent = 'http://share.v.t.qq.com/index.php?c=share&a=index&title=' +
+      title +
+      '&url=' + url + '&pic=' + avatarURL
+    urls.weibo = 'http://v.t.sina.com.cn/share/share.php?title=' +
+      title + '&url=' + url + '&pic=' + avatarURL
+    urls.qqz = 'https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url='
+      + url + '&sharesource=qzone&title=' + title + '&pics=' + avatarURL
+    urls.twitter = 'https://twitter.com/intent/tweet?status=' + title + ' ' +
+      url
+
+    $this.find('span').click(function () {
+      var key = $(this).data('type')
+
+      if (!key) {
+        return
+      }
+
+      if (key === 'wechat') {
+        if ($qrCode.find('canvas').length === 0) {
+          Util.addScript(Label.staticServePath +
+            '/js/lib/jquery.qrcode.min.js', 'qrcodeScript')
+          $qrCode.qrcode({
+            width: 128,
+            height: 128,
+            text: shareURL,
+          })
+        } else {
+          $qrCode.slideToggle()
+        }
+        return false
+      }
+
+      window.open(urls[key], '_blank', 'top=100,left=200,width=648,height=618')
+    })
+  },
   /*
    * @description 把评论中的标识替换为图片
    * @param {Dom} selector
@@ -40,53 +88,10 @@ $.extend(Page.prototype, {
     }
   },
   /*
-   * @description 解析语法高亮
-   * @param {Obj} obj 语法高亮配置参数
-   */
-  parseLanguage: function (obj) {
-    var isHljs = false
-    $('.content-reset pre').
-      each(function () {
-        isHljs = true
-      })
-
-    if (isHljs) {
-      // otherelse use highlight
-      // load css
-      if (document.createStyleSheet) {
-        document.createStyleSheet(latkeConfig.staticServePath +
-          '/js/lib/highlight-9.13.1/styles/' +
-          ((obj && obj.theme) || 'github') + '.css')
-      } else {
-        $('head').
-          append(
-            $('<link rel=\'stylesheet\' href=\'' + latkeConfig.staticServePath +
-              '/js/lib/highlight-9.13.1/styles/' +
-              ((obj && obj.theme) || 'github') + '.css\'>'))
-      }
-      if (!Label.markedAvailable) {
-        $.ajax({
-          url: latkeConfig.staticServePath +
-          '/js/lib/highlight-9.13.1/highlight.pack.js',
-          dataType: 'script',
-          cache: true,
-          success: function () {
-            hljs.initHighlighting.called = false
-            hljs.initHighlighting()
-          },
-        })
-      }
-    }
-  },
-  /*
    * @description 文章/自定义页面加载
-   * @param {Obj} obj 配置设定
-   * @param {Obj} obj.theme 代码高亮配置
    */
-  load: function (obj) {
+  load: function () {
     var that = this
-    // language
-    that.parseLanguage(obj)
     // comment
     $('#comment').click(function () {
       that.toggleEditor()
@@ -100,94 +105,83 @@ $.extend(Page.prototype, {
     })
   },
   toggleEditor: function (commentId, name) {
-    var that = this
-
-    if (typeof Vditor === 'undefined') {
-      $.ajax({
-        method: 'GET',
-        url: latkeConfig.staticServePath + '/js/lib/vditor-0.4.0/index.min.js',
-        dataType: 'script',
-        cache: true,
-        async: false,
-        success: function () {
-          window.vditor = new Vditor('soloEditorComment', {
-            placeholder: that.tips.commentContentCannotEmptyLabel,
-            height: 180,
-            tab: '\t',
-            hint: {
-              emojiPath: latkeConfig.staticServePath + '/js/lib/emojify.js-1.1.0/images/basic'
-            },
-            esc: function () {
-              $('#soloEditorCancel').click()
-            },
-            ctrlEnter: function () {
-              $('#soloEditorAdd').click()
-            },
-            preview: {
-              delay: 500,
-              show: false,
-              url: latkeConfig.servePath + '/console/markdown/2html',
-              parse: function (element) {
-                if (element.style.display === 'none') {
-                  return
-                }
-                Util.parseMarkdown('content-reset')
-                if (!Label.markedAvailable) {
-                  hljs.initHighlighting.called = false
-                  hljs.initHighlighting()
-                }
-              },
-            },
-            counter: 500,
-            resize: {
-              enable: true,
-              position: 'top',
-              after: function () {
-                $('body').css('padding-bottom', $('#soloEditor').outerHeight())
-              }
-            },
-            lang: that.tips.langLabel,
-            toolbar: [
-              'emoji',
-              'headings',
-              'bold',
-              'italic',
-              'strike',
-              '|',
-              'line',
-              'quote',
-              '|',
-              'list',
-              'ordered-list',
-              'check',
-              '|',
-              'code',
-              'inline-code',
-              '|',
-              'undo',
-              'redo',
-              '|',
-              'link',
-              'table',
-              '|',
-              'preview',
-              'fullscreen',
-              'info',
-              'help',
-            ],
-            classes: {
-              preview: 'content__reset',
-            },
-          })
-          vditor.focus()
-        },
-      })
-    }
-
     var $editor = $('#soloEditor')
     if ($editor.length === 0) {
-      location.href = latkeConfig.servePath + '/start'
+      location.href = Label.servePath + '/start'
       return
+    }
+
+    if (!$('#soloEditorComment').hasClass('vditor')) {
+      var that = this
+      Util.addScript('https://cdn.jsdelivr.net/npm/vditor@1.2.8/dist/index.min.js', 'vditorScript')
+      window.vditor = new Vditor('soloEditorComment', {
+        placeholder: that.tips.commentContentCannotEmptyLabel,
+        height: 180,
+        tab: '\t',
+        hint: {
+          emojiPath: Label.staticServePath +
+          '/js/lib/emojify.js-1.1.0/images/basic',
+        },
+        esc: function () {
+          $('#soloEditorCancel').click()
+        },
+        ctrlEnter: function () {
+          $('#soloEditorAdd').click()
+        },
+        preview: {
+          delay: 500,
+          show: false,
+          url: Label.servePath + '/console/markdown/2html',
+          hljs: {
+            enable: true,
+            style: Label.hljsStyle,
+          },
+          parse: function (element) {
+            if (element.style.display === 'none') {
+              return
+            }
+            Util.parseLanguage()
+          },
+        },
+        counter: 500,
+        resize: {
+          enable: true,
+          position: 'top',
+          after: function () {
+            $('body').css('padding-bottom', $('#soloEditor').outerHeight())
+          },
+        },
+        lang: Label.langLabel,
+        toolbar: [
+          'emoji',
+          'headings',
+          'bold',
+          'italic',
+          'strike',
+          '|',
+          'line',
+          'quote',
+          '|',
+          'list',
+          'ordered-list',
+          'check',
+          '|',
+          'code',
+          'inline-code',
+          '|',
+          'undo',
+          'redo',
+          '|',
+          'link',
+          'table',
+          '|',
+          'preview',
+          'fullscreen',
+          'info',
+          'help',
+        ],
+      })
+      vditor.focus()
     }
 
     if ($('body').css('padding-bottom') === '0px' || commentId) {
@@ -212,7 +206,7 @@ $.extend(Page.prototype, {
     var randomArticles1Label = this.tips.randomArticles1Label
     // getRandomArticles
     $.ajax({
-      url: latkeConfig.servePath + '/articles/random',
+      url: Label.servePath + '/articles/random',
       type: 'POST',
       success: function (result, textStatus) {
         var randomArticles = result.randomArticles
@@ -226,7 +220,7 @@ $.extend(Page.prototype, {
           var article = randomArticles[i]
           var title = article.articleTitle
           var randomArticleLiHtml = '<li>' + '<a rel=\'nofollow\' title=\'' +
-            title + '\' href=\'' + latkeConfig.servePath +
+            title + '\' href=\'' + Label.servePath +
             article.articlePermalink + '\'>' + title + '</a></li>'
           listHtml += randomArticleLiHtml
         }
@@ -246,7 +240,7 @@ $.extend(Page.prototype, {
    */
   loadRelevantArticles: function (id, headTitle) {
     $.ajax({
-      url: latkeConfig.servePath + '/article/id/' + id + '/relevant/articles',
+      url: Label.servePath + '/article/id/' + id + '/relevant/articles',
       type: 'GET',
       success: function (data, textStatus) {
         var articles = data.relevantArticles
@@ -260,7 +254,7 @@ $.extend(Page.prototype, {
           var title = article.articleTitle
           var articleLiHtml = '<li>'
             + '<a rel=\'nofollow\' title=\'' + title + '\' href=\'' +
-            latkeConfig.servePath + article.articlePermalink + '\'>'
+            Label.servePath + article.articlePermalink + '\'>'
             + title + '</a></li>'
           listHtml += articleLiHtml
         }
@@ -347,7 +341,7 @@ $.extend(Page.prototype, {
 
       $.ajax({
         type: 'POST',
-        url: latkeConfig.servePath + '/' + type + '/comments',
+        url: Label.servePath + '/' + type + '/comments',
         cache: false,
         contentType: 'application/json',
         data: JSON.stringify(requestJSONObject),
@@ -357,7 +351,6 @@ $.extend(Page.prototype, {
             $('#soloEditorError').html(result.msg)
             return
           }
-
           that.toggleEditor()
           vditor.setValue('')
           that.addCommentAjax(Util.replaceEmString(result.cmtTpl))
@@ -416,6 +409,8 @@ $.extend(Page.prototype, {
     } else {
       $('#comments').html(commentHTML)
     }
+    Util.parseMarkdown()
+    Util.parseLanguage()
     window.location.hash = '#comments'
   },
 })

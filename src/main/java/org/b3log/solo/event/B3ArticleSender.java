@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -48,7 +48,7 @@ import org.json.JSONObject;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://hacpai.com/member/armstrong">ArmstrongCN</a>
- * @version 1.0.2.18, Feb 21, 2019
+ * @version 1.0.2.19, Mar 27, 2019
  * @since 0.3.1
  */
 @Singleton
@@ -95,7 +95,7 @@ public class B3ArticleSender extends AbstractEventListener<JSONObject> {
                 return;
             }
 
-            if (Latkes.getServePath().contains("localhost") || Strings.isIPv4(Latkes.getServePath())) {
+            if (Latkes.getServePath().contains("localhost") || Strings.isIPv4(Latkes.getServerHost())) {
                 LOGGER.log(Level.INFO, "Solo is running on local server, ignored push article [title={0}] to Rhy", title);
 
                 return;
@@ -124,7 +124,7 @@ public class B3ArticleSender extends AbstractEventListener<JSONObject> {
                     put("article", article).
                     put("client", client);
             final HttpResponse response = HttpRequest.post("https://rhythm.b3log.org/api/article").bodyText(requestJSONObject.toString()).
-                    connectionTimeout(3000).timeout(7000).
+                    connectionTimeout(3000).timeout(7000).trustAllCerts(true).
                     contentTypeJson().header("User-Agent", Solos.USER_AGENT).send();
 
             LOGGER.log(Level.INFO, "Pushed an article [title={0}] to Rhy, response [{1}]", title, response.toString());

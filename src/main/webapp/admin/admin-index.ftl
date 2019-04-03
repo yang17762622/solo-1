@@ -1,7 +1,7 @@
 <#--
 
     Solo - A small and beautiful blogging system written in Java.
-    Copyright (c) 2010-2019, b3log.org & hacpai.com
+    Copyright (c) 2010-present, b3log.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -17,22 +17,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 -->
+<#include "../common-template/macro-common_head.ftl"/>
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-        <meta name="copyright" content="B3log">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <meta http-equiv="Window-target" content="_top">
-        <meta name="robots" content="fn__none" />
-        <title>${adminConsoleLabel} - ${blogTitle}</title>
-        <link type="text/css" rel="stylesheet" href="${staticServePath}/scss/admin.css?${staticResourceVersion}" />
-        <link type="text/css" rel="stylesheet" href="${staticServePath}/js/lib/highlight-9.13.1/styles/github.css?${staticResourceVersion}" />
-        <link rel="icon" type="image/png" href="${staticServePath}/favicon.png" />
-        <link rel="manifest" href="${servePath}/manifest.json">
+        <@head title="${adminConsoleLabel} - ${blogTitle}">
+            <link type="text/css" rel="stylesheet" href="${staticServePath}/scss/admin.css?${staticResourceVersion}" />
+            <meta name="robots" content="fn__none" />
+        </@head>
     </head>
     <body onhashchange="admin.setCurByHash();">
         <div class="tip"><span id="loadMsg">${loadingLabel}</span></div>
@@ -105,6 +97,11 @@
                                 </div>
                             </li>
                             <li>
+                                <div id="tabs_theme-list">
+                                    <a href="#tools/theme-list">${skinLabel}</a>
+                                </div>
+                            </li>
+                            <li>
                                 <div id="tabs_category-list">
                                     <a href="#tools/category-list">${categoryListLabel}</a>
                                 </div>
@@ -153,6 +150,7 @@
                 <div id="tabsPanel_draft-list" class="fn__none"></div>
                 <div id="tabsPanel_link-list" class="fn__none"></div>
                 <div id="tabsPanel_preference" class="fn__none"></div>
+                <div id="tabsPanel_theme-list" class="fn__none"></div>
                 <div id="tabsPanel_category-list" class="fn__none"></div>
                 <div id="tabsPanel_page-list" class="fn__none"></div>
                 <div id="tabsPanel_others" class="fn__none"></div>
@@ -167,7 +165,7 @@
             </div>
         </div>
         <script src="${staticServePath}/js/lib/compress/admin-lib.min.js"></script>
-        <script src="${staticServePath}/js/lib/vditor-0.4.0/index.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vditor@1.2.8/dist/index.min.js"></script>
         <script src="${staticServePath}/js/common${miniPostfix}.js"></script>
         <#if "" == miniPostfix>
         <script src="${staticServePath}/js/admin/admin.js"></script>
@@ -188,6 +186,7 @@
         <script src="${staticServePath}/js/admin/plugin.js"></script>
         <script src="${staticServePath}/js/admin/main.js"></script>
         <script src="${staticServePath}/js/admin/about.js"></script>
+        <script src="${staticServePath}/js/admin/themeList.js"></script>
         <#else>
         <script src="${staticServePath}/js/admin/admin.min.js?${staticResourceVersion}"></script>
         </#if>

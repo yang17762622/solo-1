@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,7 @@
  */
 package org.b3log.solo.processor.console;
 
+import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
 import org.b3log.latke.ioc.Inject;
 import org.b3log.latke.logging.Level;
@@ -29,22 +30,18 @@ import org.b3log.latke.servlet.annotation.RequestProcessor;
 import org.b3log.latke.servlet.renderer.JsonRenderer;
 import org.b3log.solo.model.Option;
 import org.b3log.solo.model.Sign;
-import org.b3log.solo.model.Skin;
 import org.b3log.solo.service.OptionMgmtService;
 import org.b3log.solo.service.OptionQueryService;
 import org.b3log.solo.service.PreferenceMgmtService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * Preference console request processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://github.com/hzchendou">hzchendou</a>
- * @version 1.2.0.21, Feb 8, 2019
+ * @version 1.2.0.24, Mar 29, 2019
  * @since 0.4.0
  */
 @RequestProcessor
@@ -145,10 +142,8 @@ public class PreferenceConsole {
      *         "blogSubtitle": "",
      *         "localeString": "",
      *         "timeZoneId": "",
-     *         "skinName": "",
      *         "skinDirName": "",
      *         "skins": "[{
-     *             "skinName": "",
      *             "skinDirName": ""
      *         }, ....]",
      *         "noticeBoard": "",
@@ -167,6 +162,8 @@ public class PreferenceConsole {
      *         "commentable": boolean,
      *         "feedOutputMode: "" // Optional values: "abstract"/"full"
      *         "feedOutputCnt": int,
+     *         "faviconURL": "",
+     *         "syncGitHub": boolean,
      *         "customVars" "", // 支持配置自定义参数 https://github.com/b3log/solo/issues/12535
      *     }
      * }
@@ -185,6 +182,12 @@ public class PreferenceConsole {
                 renderer.setJSONObject(new JSONObject().put(Keys.STATUS_CODE, false));
 
                 return;
+            }
+
+            String hljsTheme = preference.optString(Option.ID_C_HLJS_THEME);
+            if (StringUtils.isBlank(hljsTheme)) {  // TODO: 在 v3.5.0 发布后可移除判空
+                hljsTheme = Option.DefaultPreference.DEFAULT_HLJS_THEME;
+                preference.put(Option.ID_C_HLJS_THEME, hljsTheme);
             }
 
             String footerContent = "";
@@ -210,7 +213,6 @@ public class PreferenceConsole {
     /**
      * Updates the preference by the specified request.
      * <p>
-     * <p>
      * Request json:
      * <pre>
      * {
@@ -226,7 +228,6 @@ public class PreferenceConsole {
      *         "randomArticlesDisplayCount": int,
      *         "blogTitle": "",
      *         "blogSubtitle": "",
-     *         "skinDirName": "",
      *         "localeString": "",
      *         "timeZoneId": "",
      *         "noticeBoard": "",
@@ -244,6 +245,8 @@ public class PreferenceConsole {
      *         "commentable": boolean,
      *         "feedOutputMode: "",
      *         "feedOutputCnt": int,
+     *         "faviconURL": "",
+     *         "syncGitHub": boolean,
      *         "customVars" "", // 支持配置自定义参数 https://github.com/b3log/solo/issues/12535
      *     }
      * }
@@ -267,12 +270,6 @@ public class PreferenceConsole {
 
             preferenceMgmtService.updatePreference(preference);
 
-            final HttpServletResponse response = context.getResponse();
-            final Cookie cookie = new Cookie(Skin.SKIN, preference.getString(Skin.SKIN_DIR_NAME));
-            cookie.setMaxAge(60 * 60); // 1 hour
-            cookie.setPath("/");
-            response.addCookie(cookie);
-
             ret.put(Keys.STATUS_CODE, true);
             ret.put(Keys.MSG, langPropsService.get("updateSuccLabel"));
         } catch (final ServiceException e) {
@@ -280,7 +277,7 @@ public class PreferenceConsole {
 
             final JSONObject jsonObject = new JSONObject().put(Keys.STATUS_CODE, false);
             renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+            jsonObject.put(Keys.MSG, langPropsService.get("updateFailLabel"));
         }
     }
 

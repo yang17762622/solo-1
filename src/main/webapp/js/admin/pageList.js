@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -105,7 +105,7 @@ admin.pageList = {
         var that = this;
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/pages/" + pageNum + "/" + Label.PAGE_SIZE + "/" + Label.WINDOW_SIZE,
+            url: Label.servePath + "/console/pages/" + pageNum + "/" + Label.PAGE_SIZE + "/" + Label.WINDOW_SIZE,
             type: "GET",
             cache: false,
             success: function (result, textStatus) {
@@ -172,7 +172,7 @@ admin.pageList = {
         $("#tipMsg").text("");
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/page/" + id,
+            url: Label.servePath + "/console/page/" + id,
             type: "GET",
             cache: false,
             success: function (result, textStatus) {
@@ -213,7 +213,7 @@ admin.pageList = {
             $("#tipMsg").text("");
 
             $.ajax({
-                url: latkeConfig.servePath + "/console/page/" + id,
+                url: Label.servePath + "/console/page/" + id,
                 type: "DELETE",
                 cache: false,
                 success: function (result, textStatus) {
@@ -269,7 +269,7 @@ admin.pageList = {
             };
 
             $.ajax({
-                url: latkeConfig.servePath + "/console/page/",
+                url: Label.servePath + "/console/page/",
                 type: "POST",
                 cache: false,
                 data: JSON.stringify(requestJSONObject),
@@ -336,7 +336,7 @@ admin.pageList = {
             };
 
             $.ajax({
-                url: latkeConfig.servePath + "/console/page/",
+                url: Label.servePath + "/console/page/",
                 type: "PUT",
                 cache: false,
                 data: JSON.stringify(requestJSONObject),
@@ -402,7 +402,7 @@ admin.pageList = {
         };
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/page/order/",
+            url: Label.servePath + "/console/page/order/",
             type: "PUT",
             cache: false,
             data: JSON.stringify(requestJSONObject),

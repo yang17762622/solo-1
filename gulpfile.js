@@ -1,6 +1,6 @@
 /*
- * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Solo - A small and beautiful blogging system written in Java.
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.0.1, Jan 2, 2019
+ * @version 1.7.0.2, Mar 29, 2019
  */
 
 'use strict'
@@ -79,6 +79,7 @@ function miniAdmin () {
     './src/main/webapp/js/admin/others.js',
     './src/main/webapp/js/admin/linkList.js',
     './src/main/webapp/js/admin/preference.js',
+    './src/main/webapp/js/admin/themeList.js',
     './src/main/webapp/js/admin/pluginList.js',
     './src/main/webapp/js/admin/userList.js',
     './src/main/webapp/js/admin/categoryList.js',
@@ -97,8 +98,7 @@ function miniAdminLibs () {
   // concat js
   const jsJqueryUpload = [
     './src/main/webapp/js/lib/jquery/jquery.min.js',
-    './src/main/webapp/js/lib/jquery/jquery.bowknot.min.js',
-    './src/main/webapp/js/lib/highlight-9.13.1/highlight.pack.js']
+    './src/main/webapp/js/lib/jquery/jquery.bowknot.min.js',]
   return gulp.src(jsJqueryUpload).
     pipe(uglify({output: {ascii_only: true}})).
     // https://github.com/b3log/solo/issues/12522

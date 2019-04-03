@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.0.0, Mar 4, 2019
+ * @version 1.8.0.3, Apr 2, 2019
  */
 
 /**
@@ -30,28 +30,28 @@
 var Util = {
   isArticlePage: function (href) {
     var isArticle = true
-    if (href.indexOf(latkeConfig.servePath + '/tags/') > -1) {
+    if (href.indexOf(Label.servePath + '/tags/') > -1) {
       isArticle = false
     }
-    if (href.indexOf(latkeConfig.servePath + '/tags.html') > -1) {
+    if (href.indexOf(Label.servePath + '/tags.html') > -1) {
       isArticle = false
     }
-    if (href.indexOf(latkeConfig.servePath + '/category/') > -1) {
+    if (href.indexOf(Label.servePath + '/category/') > -1) {
       isArticle = false
     }
-    if (href.indexOf(latkeConfig.servePath + '/archives.html') > -1) {
+    if (href.indexOf(Label.servePath + '/archives.html') > -1) {
       isArticle = false
     }
-    if (href.indexOf(latkeConfig.servePath + '/archives/') > -1) {
+    if (href.indexOf(Label.servePath + '/archives/') > -1) {
       isArticle = false
     }
-    if (href.indexOf(latkeConfig.servePath + '/links.html') > -1) {
+    if (href.indexOf(Label.servePath + '/links.html') > -1) {
       isArticle = false
     }
-    if (href === latkeConfig.servePath) {
+    if (href === Label.servePath) {
       isArticle = false
     }
-    if (/^[0-9]*$/.test(href.replace(latkeConfig.servePath + '/', ''))) {
+    if (/^[0-9]*$/.test(href.replace(Label.servePath + '/', ''))) {
       isArticle = false
     }
     return isArticle
@@ -70,16 +70,18 @@ var Util = {
         storage: true,
         titleSuffix: '',
         filter: function (href) {
-          if (href === latkeConfig.servePath + '/rss.xml' ||
-            href.indexOf(latkeConfig.servePath + '/admin-index.do') > -1) {
+          if (href === Label.servePath + '/rss.xml' ||
+            href.indexOf(Label.servePath + '/admin-index.do') > -1) {
             return true
           }
-          if (href.indexOf(latkeConfig.servePath) > -1) {
+          if (href.indexOf(Label.servePath) > -1) {
             return false
           }
           return true
         },
         callback: function () {
+          Util.parseMarkdown()
+          Util.parseLanguage()
           cb && cb()
         },
       })
@@ -96,93 +98,96 @@ var Util = {
   /**
    * 图片预览
    */
-  previewImg:function () {
-    $('body').on('click', '.content-reset img', function () {
-      window.open(this.src);
-    });
+  previewImg: function () {
+    $('body').on('click', '.vditor-reset img', function () {
+      if ($(this).hasClass('prevent')) {
+        return
+      }
+      window.open(this.src)
+    })
   },
   /**
-   * 按需加载 MathJax 及 flow
+   * 异步添加 css
+   * @param url css 文件访问地址
+   * @param id css 文件标示
+   */
+  addStyle: function (url, id) {
+    if (!document.getElementById(id)) {
+      var styleElement = document.createElement('link')
+      styleElement.id = id
+      styleElement.setAttribute('rel', 'stylesheet')
+      styleElement.setAttribute('type', 'text/css')
+      styleElement.setAttribute('href', url)
+      document.getElementsByTagName('head')[0].appendChild(styleElement)
+    }
+  },
+  /**
+   * 异步添加 js
+   * @param url js 文件访问地址
+   * @param id js 文件标示
+   */
+  addScript: function (url, id) {
+    if (!document.getElementById(id)) {
+      var xhrObj = new XMLHttpRequest()
+      xhrObj.open('GET', url, false)
+      xhrObj.setRequestHeader('Accept',
+        'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01')
+      xhrObj.send('')
+      var scriptElement = document.createElement('script')
+      scriptElement.id = id
+      scriptElement.type = 'text/javascript'
+      scriptElement.text = xhrObj.responseText
+      document.getElementsByTagName('head')[0].appendChild(scriptElement)
+    }
+  },
+  /*
+  * @description 解析语法高亮
+  */
+  parseLanguage: function () {
+    if ($('.vditor-reset pre > code').length === 0) {
+      return
+    }
+    Util.addStyle('https://cdn.jsdelivr.net/npm/highlight.js@9.15.6/styles/' +
+      Label.hljsStyle + '.min.css', 'vditorHljsStyle')
+
+    var initHljs = function () {
+      hljs.initHighlighting.called = false
+      hljs.initHighlighting()
+    }
+
+    if (!Label.markedAvailable) {
+      if (typeof hljs === 'undefined') {
+        $.ajax({
+          url: 'https://cdn.jsdelivr.net/npm/vditor@1.2.8/src/assets/js/highlight.pack.js',
+          dataType: 'script',
+          cache: true,
+          success: function () {
+            initHljs()
+          },
+        })
+      } else {
+        initHljs()
+      }
+    }
+  },
+  /**
+   * 按需加载数学公式、代码复制、图标
    * @returns {undefined}
    */
   parseMarkdown: function () {
-    var hasMathJax = false
-    var hasFlow = false
-    var className = 'content-reset'
-    $('.' + className).each(function () {
-      $(this).find('p').each(function () {
-        if ($(this).text().split('$').length > 2 ||
-          ($(this).text().split('\\(').length > 1 &&
-            $(this).text().split('\\)').length > 1)) {
-          hasMathJax = true
-        }
-      })
-      if ($(this).find('code.lang-flow, code.language-flow').length > 0) {
-        hasFlow = true
-      }
-    })
-
-    if (hasMathJax) {
-      var initMathJax = function () {
-        MathJax.Hub.Config({
-          tex2jax: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$']],
-            processEscapes: true,
-            processEnvironments: true,
-            skipTags: ['pre', 'code', 'script'],
-          },
-          asciimath2jax: {
-            delimiters: [['$', '$']],
-          },
-        })
-        MathJax.Hub.Typeset()
-      }
-
-      if (typeof MathJax !== 'undefined') {
-        initMathJax()
-      } else {
-        $.ajax({
-          method: 'GET',
-          url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML',
-          dataType: 'script',
-          cache: true,
-        }).done(function () {
-          initMathJax()
-        })
-      }
+    var text = $('.vditor-reset').text()
+    if ($('.vditor-reset pre > code').length === 0 &&
+      !(text.split('$').length > 2 ||
+        (text.split('\\(').length > 1 && text.split('\\)').length > 1))) {
+      return
     }
 
-    if (hasFlow) {
-      var initFlow = function () {
-        $('.' + className + ' code.lang-flow, .' + className +
-          ' code.language-flow').each(function (index) {
-          var $it = $(this)
-          var id = 'symFlow' + (new Date()).getTime() + index
-          $it.hide()
-          var diagram = flowchart.parse($.trim($it.text()))
-          $it.parent().
-            after('<div style="text-align: center" id="' + id + '"></div>')
-          diagram.drawSVG(id)
-          $it.parent().remove()
-          $('#' + id).find('svg').height('auto').width('auto')
-        })
-      }
+    Util.addScript('https://cdn.jsdelivr.net/npm/vditor@1.2.8/dist/index.min.js',
+      'vditorScript')
 
-      if (typeof (flowchart) !== 'undefined') {
-        initFlow()
-      } else {
-        $.ajax({
-          method: 'GET',
-          url: latkeConfig.staticServePath +
-          '/js/lib/flowchart/flowchart.min.js',
-          dataType: 'script',
-          cache: true,
-        }).done(function () {
-          initFlow()
-        })
-      }
-    }
+    Vditor.mermaidRender(document.body)
+    Vditor.mathRender(document.body)
+    Vditor.codeRender(document.body, Label.langLabel)
   },
   /**
    * @description IE6/7，跳转到 kill-browser 页面
@@ -196,7 +201,7 @@ var Util = {
           var killIEHTML = '<div style=\'display: block; height: 100%; width: 100%; position: fixed; background-color: rgb(0, 0, 0); opacity: 0.6;filter: alpha(opacity=60); top: 0px;z-index:110\'></div>'
             + '<iframe style=\'left:' + left + 'px;z-index:120;top: ' + top1 +
             'px; position: fixed; border: 0px none; width: 781px; height: 680px;\' src=\'' +
-            latkeConfig.servePath + '/kill-browser\'></iframe>'
+            Label.servePath + '/kill-browser\'></iframe>'
           $('body').append(killIEHTML)
         } catch (e) {
           var left = 10,
@@ -204,7 +209,7 @@ var Util = {
           var killIEHTML = '<div style=\'display: block; height: 100%; width: 100%; position: fixed; background-color: rgb(0, 0, 0); opacity: 0.6;filter: alpha(opacity=60); top: 0px;z-index:110\'></div>'
             + '<iframe style=\'left:' + left + 'px;z-index:120;top: ' + top1 +
             'px; position: fixed; border: 0px none; width: 781px; height: 680px;\' src=\'' +
-            latkeConfig.servePath + '/kill-browser\'></iframe>'
+            Label.servePath + '/kill-browser\'></iframe>'
           document.body.innerHTML = document.body.innerHTML + killIEHTML
         }
       }
@@ -234,7 +239,7 @@ var Util = {
     str = commentSplited[0]
     for (var j = 1; j < commentSplited.length; j++) {
       var key = commentSplited[j].substr(0, 2)
-      str += '<img width=\'20\' src=\'' + latkeConfig.staticServePath +
+      str += '<img width=\'20\' src=\'' + Label.staticServePath +
         '/images/emotions/em' + key + '.png\' alt=\'' +
         Label['em' + key + 'Label'] + '\' title=\'' +
         Label['em' + key + 'Label'] + '\'/> ' + commentSplited[j].substr(3)
@@ -289,12 +294,21 @@ var Util = {
    * @description 页面初始化执行的函数
    */
   init: function () {
-    //window.onerror = Util.error;
     Util.killIE()
-    Util.setTopBar()
     Util.parseMarkdown()
+    Util.parseLanguage()
     Util.initSW()
     Util.previewImg()
+    Util.initDebugInfo()
+  },
+  /**
+   * 调试区域文案
+   */
+  initDebugInfo: function () {
+    console.log(
+      '%cSolo%c\n  🎸一款小而美的博客系统，专为程序员设计。' + Label.version + ' © ' +
+      (new Date).getFullYear(),
+      'font-size:96px;color:#3b3e43', 'font-size:12px;color:rgba(0,0,0,0.38);')
   },
   /**
    * @description 注册 Service Work

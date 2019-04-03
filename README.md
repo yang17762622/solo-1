@@ -5,10 +5,12 @@
 <br><br>
 <a title="Build Status" target="_blank" href="https://travis-ci.org/b3log/solo"><img src="https://img.shields.io/travis/b3log/solo.svg?style=flat-square"></a>
 <a title="Coverage Status" target="_blank" href="https://coveralls.io/github/b3log/solo"><img src="https://img.shields.io/coveralls/github/b3log/solo.svg?style=flat-square"></a>
-<a title="Code Size" target="_blank" href="https://github.com/b3log/solo"><img src="https://img.shields.io/github/languages/code-size/b3log/solo.svg?style=flat-square"></a>
+<a title="Code Size" target="_blank" href="https://github.com/b3log/solo"><img src="https://img.shields.io/github/languages/code-size/b3log/solo.svg?style=flat-square&color=9cf"></a>
 <a title="AGPLv3" target="_blank" href="https://www.gnu.org/licenses/agpl-3.0.txt"><img src="http://img.shields.io/badge/license-AGPLv3-orange.svg?style=flat-square"></a>
 <a title="Releases" target="_blank" href="https://github.com/b3log/solo/releases"><img src="https://img.shields.io/github/release/b3log/solo.svg?style=flat-square"></a>
 <a title="Downloads" target="_blank" href="https://github.com/b3log/solo/releases"><img src="https://img.shields.io/github/downloads/b3log/solo/total.svg?style=flat-square"></a>
+<a title="Docker Pulls" target="_blank" href="https://hub.docker.com/r/b3log/solo"><img src="https://img.shields.io/docker/pulls/b3log/solo.svg?style=flat-square&color=blueviolet"></a>
+<a title="Hits" target="_blank" href="http://hits.dwyl.io/b3log/solo"><img src="http://hits.dwyl.io/b3log/solo.svg"></a>
 </p>
 
 ## 简介
@@ -29,8 +31,9 @@
 * [Relyn](http://relyn.cn)
 * [思干豆](http://sigandou.com)
 * [DevHyxo](https://blog.devhyxo.top)
+* [EchoCow](https://echocow.cn)
 
-## 功能 
+## 功能
 
 * Markdown / Emoji
 * [聚合分类](https://github.com/b3log/solo/issues/12256) / 标签
@@ -47,41 +50,94 @@
 * SQL / JSON / Markdown 导出
 * Atom / RSS / Sitemap
 * CDN 静态资源分离
-* [GitHub 集成](https://github.com/b3log/solo/issues/12514)
+* [GitHub 仓库展示](https://github.com/b3log/solo/issues/12514) / [自动备份文章到仓库](https://github.com/b3log/solo/issues/12676)
 * [内置 HTTPS+CDN 文件存储](https://github.com/b3log/solo/issues/12556)
 
 ## 界面
 
 ### 开始使用
 
-![init](https://user-images.githubusercontent.com/873584/52908896-800a2d80-32b9-11e9-9702-43bab360651d.png)
+![start](https://user-images.githubusercontent.com/873584/54970301-9001e500-4fbc-11e9-83de-bf3841adecff.png)
 
 ### 后台首页
 
-![console-index](https://user-images.githubusercontent.com/873584/52255442-85788700-294d-11e9-8c8e-38bdcba6736c.png)
+![console](https://user-images.githubusercontent.com/873584/54970489-4796f700-4fbd-11e9-837b-93394ff80304.png)
 
 ### 编辑文章
 
-![article](https://user-images.githubusercontent.com/873584/52255441-85788700-294d-11e9-8fb4-f72e353a76de.png)
+![post](https://user-images.githubusercontent.com/873584/54970405-ea9b4100-4fbc-11e9-9e05-5f5e4b94d2b8.png)
 
 ### 选择皮肤
 
-![skin](https://user-images.githubusercontent.com/873584/52255444-85788700-294d-11e9-9c21-8758bad2c3b4.png)
+![skin](https://user-images.githubusercontent.com/873584/54970463-22a28400-4fbd-11e9-953e-6922a12f5f11.png)
 
 ### 前台界面
 
-![index](https://user-images.githubusercontent.com/873584/52255333-19961e80-294d-11e9-85c4-92bc508864a4.png)
+![index](https://user-images.githubusercontent.com/873584/54970236-5a5cfc00-4fbc-11e9-8d04-d7a517f78839.png)
 
 ## 安装
+
+### 本地试用
 
 [下载](https://github.com/b3log/solo/releases)最新的 Solo 包解压，进入解压目录执行：
 
 * Windows: `java -cp "WEB-INF/lib/*;WEB-INF/classes" org.b3log.solo.Starter`
 * Unix-like: `java -cp "WEB-INF/lib/*:WEB-INF/classes" org.b3log.solo.Starter`
 
-用 `Docker` 运行？
+如果你有 Java 开发环境，可参考[这里](https://hacpai.com/article/1493822943172)通过源码构建运行。
 
-`docker volume create solo_datas && docker run --privileged --name solo --restart=unless-stopped -p 8080:8080 -v solo_datas:/opt/b3log/backup/ -d 88250/solo`
+**请注意**：我们不建议通过 war 发布包或者源码构建部署，因为这样的部署方式在将来有新版本发布时升级会比较麻烦。
+这两种方式请仅用于本地试用，线上生产环境建议通过 Docker 部署。
+
+### Docker 部署
+
+获取最新镜像：
+
+```shell
+docker pull b3log/solo
+```
+
+* 使用 MySQL
+
+  先手动建库（库名 `solo`，字符集使用 `utf8mb4`，排序规则 `utf8mb4_general_ci`），然后启动容器：
+  
+  ```shell
+  docker run --detach --name solo --network=host \
+      --env RUNTIME_DB="MYSQL" \
+      --env JDBC_USERNAME="root" \
+      --env JDBC_PASSWORD="123456" \
+      --env JDBC_DRIVER="com.mysql.cj.jdbc.Driver" \
+      --env JDBC_URL="jdbc:mysql://127.0.0.1:3306/solo?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC" \
+      b3log/solo --listen_port=8080 --server_scheme=http --server_host=localhost 
+  ```
+  为了简单，使用了主机网络模式来连接主机上的 MySQL。
+  
+* 使用 H2 Database
+
+  ```shell
+  docker run --detach --name solo --volume ~/solo_h2/:/opt/solo/h2/ --publish 8080:8080 \
+      --env RUNTIME_DB="H2" \
+      --env JDBC_USERNAME="root" \
+      --env JDBC_PASSWORD="123456" \
+      --env JDBC_DRIVER="org.h2.Driver" \
+      --env JDBC_URL="jdbc:h2:/opt/solo/h2/db;MODE=MYSQL" \
+      b3log/solo --listen_port=8080 --server_scheme=http --server_host=localhost 
+  ```
+
+启动参数说明：
+
+* `--listen_port`：进程监听端口
+* `--server_scheme`：最终访问协议，如果反代服务启用了 HTTPS 这里也需要改为 `https`
+* `--server_host`：最终访问域名或公网 IP，不要带端口号
+
+完整启动参数的说明可以使用 `-h` 来查看。
+
+### Docker 升级
+
+1. 拉取最新镜像
+2. 重启容器
+
+可参考[这里](https://github.com/b3log/solo/blob/master/scripts/docker-restart.sh)编写一个重启脚本，并通过 crontab 每日凌晨运行来实现自动更新。
 
 ## 文档
 

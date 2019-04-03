@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.0.7, Mar 4, 2019
+ * @version 1.0.0.8, Mar 27, 2019
  * @since 2.9.5
  */
 @RequestProcessor
@@ -148,12 +148,12 @@ public class OAuthProcessor {
     }
 
     /**
-     * Shows OAuth callback page.
+     * OAuth callback.
      *
      * @param context the specified context
      */
     @RequestProcessing(value = "/oauth/github", method = HttpMethod.GET)
-    public synchronized void showAuthCallback(final RequestContext context) {
+    public synchronized void authCallback(final RequestContext context) {
         final String state = context.param("state");
         String referer = STATES.get(state);
         if (StringUtils.isBlank(referer)) {
@@ -200,6 +200,16 @@ public class OAuthProcessor {
                         userMgmtService.addUser(addUserReq);
                     } catch (final Exception e) {
                         LOGGER.log(Level.ERROR, "Register via oauth failed", e);
+                        context.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+                        return;
+                    }
+                } else {
+                    user.put(UserExt.USER_GITHUB_ID, openId);
+                    try {
+                        userMgmtService.updateUser(user);
+                    } catch (final Exception e) {
+                        LOGGER.log(Level.ERROR, "Update user GitHub id failed", e);
                         context.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
                         return;

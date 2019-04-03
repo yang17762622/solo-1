@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,10 +30,6 @@ admin.article = {
     isArticle: undefined,
   },
   content: '',
-  // 自动保存草稿定时器
-  autoSaveDraftTimer: '',
-  // 自动保存间隔
-  AUTOSAVETIME: 1000 * 60,
   /**
    * @description 获取文章并把值塞入发布文章页面
    * @param {String} id 文章 id
@@ -51,7 +47,7 @@ admin.article = {
     $('#loadMsg').text(Label.loadingLabel)
     $('#tipMsg').text('')
     $.ajax({
-      url: latkeConfig.servePath + '/console/article/' +
+      url: Label.servePath + '/console/article/' +
       admin.article.status.id,
       type: 'GET',
       cache: false,
@@ -115,7 +111,7 @@ admin.article = {
       $('#tipMsg').text('')
 
       $.ajax({
-        url: latkeConfig.servePath + '/console/article/' + id,
+        url: Label.servePath + '/console/article/' + id,
         type: 'DELETE',
         cache: false,
         success: function (result, textStatus) {
@@ -133,9 +129,8 @@ admin.article = {
   /**
    * @@description 添加文章
    * @param {Boolean} articleStatus 0：已发布，1：草稿
-   * @param {Boolean} isAuto 是否为自动保存
    */
-  add: function (articleStatus, isAuto) {
+  add: function (articleStatus) {
     if (admin.article.validate()) {
       var that = this
       that._addDisabled()
@@ -176,24 +171,18 @@ admin.article = {
       }
 
       $.ajax({
-        url: latkeConfig.servePath + '/console/article/',
+        url: Label.servePath + '/console/article/',
         type: 'POST',
         cache: false,
         data: JSON.stringify(requestJSONObject),
-        success: function (result, textStatus) {
-          if (isAuto) {
-            $('#tipMsg').text(Label.autoSaveLabel)
-            admin.article.status.id = result.oId
-            return
-          }
-
+        success: function (result) {
           $('#tipMsg').text(result.msg)
           if (!result.sc) {
             return
           }
 
+          admin.article.status.id = undefined
           if (articleStatus === 0) {
-            admin.article.status.id = undefined
             admin.selectTab('article/article-list')
           } else {
             admin.selectTab('article/draft-list')
@@ -201,7 +190,7 @@ admin.article = {
 
           admin.article.isConfirm = false
         },
-        complete: function () {
+        complete: function (jqXHR, textStatus) {
           that._removeDisabled()
           $('#loadMsg').text('')
         },
@@ -211,9 +200,8 @@ admin.article = {
   /**
    * @description 更新文章
    * @param {Boolean} articleStatus 0：已发布，1：草稿
-   * @param {Boolean} isAuto 是否为自动保存
    */
-  update: function (articleStatus, isAuto) {
+  update: function (articleStatus) {
     if (admin.article.validate()) {
       var that = this
       that._addDisabled()
@@ -253,16 +241,11 @@ admin.article = {
       }
 
       $.ajax({
-        url: latkeConfig.servePath + '/console/article/',
+        url: Label.servePath + '/console/article/',
         type: 'PUT',
         cache: false,
         data: JSON.stringify(requestJSONObject),
         success: function (result, textStatus) {
-          if (isAuto) {
-            $('#tipMsg').text(Label.autoSaveLabel)
-            return
-          }
-
           $('#tipMsg').text(result.msg)
           if (!result.sc) {
             return
@@ -291,7 +274,7 @@ admin.article = {
    */
   setStatus: function () {
     $.ajax({// Gets all tags
-      url: latkeConfig.servePath + '/console/tags',
+      url: Label.servePath + '/console/tags',
       type: 'GET',
       cache: false,
       success: function (result, textStatus) {
@@ -356,7 +339,7 @@ admin.article = {
 
     $('#permalink').val('')
     $('#articleCammentable').prop('checked', true)
-    $('#postToCommunity').prop('checked', true)
+    $('#postToCommunity').prop('checked', false)
     $('.signs button').each(function (i) {
       if (i === 0) {
         this.className = 'selected'
@@ -383,7 +366,7 @@ admin.article = {
 
     // For tag auto-completion
     $.ajax({// Gets all tags
-      url: latkeConfig.servePath + '/console/tags',
+      url: Label.servePath + '/console/tags',
       type: 'GET',
       cache: false,
       success: function (result, textStatus) {
@@ -445,15 +428,10 @@ admin.article = {
       resize: true,
     })
 
-    admin.article.clearDraftTimer()
-    admin.article.autoSaveDraftTimer = setInterval(function () {
-      admin.article._autoSaveToDraft()
-    }, admin.article.AUTOSAVETIME)
-
     // thumbnail
     $('#articleThumbnailBtn').click(function () {
       $.ajax({// Gets all tags
-        url: latkeConfig.servePath + '/console/thumbs?n=1&w=768&h=432',
+        url: Label.servePath + '/console/thumbs?n=1&w=768&h=432',
         type: 'GET',
         cache: false,
         success: function (result, textStatus) {
@@ -468,32 +446,6 @@ admin.article = {
         },
       })
     }).click()
-  },
-  /**
-   * @description 自动保存草稿件
-   */
-  _autoSaveToDraft: function () {
-    if ($('#title').val().replace(/\s/g, '') === '' ||
-      admin.editors.articleEditor.getContent().replace(/\s/g, '') === '') {
-      return
-    }
-    if (admin.article.status.id) {
-      if (!admin.article.status.isArticle) {
-        admin.article.update(1, true)
-      }
-    } else {
-      admin.article.add(1, true)
-      admin.article.status.isArticle = false
-    }
-  },
-  /**
-   * @description 关闭定时器
-   */
-  clearDraftTimer: function () {
-    if (admin.article.autoSaveDraftTimer !== '') {
-      window.clearInterval(admin.article.autoSaveDraftTimer)
-      admin.article.autoSaveDraftTimer = ''
-    }
   },
   /**
    * @description 验证发布文章字段的合法性
@@ -513,22 +465,16 @@ admin.article = {
   },
   /**
    * @description 取消发布
-   * @param {Boolean} isAuto 是否为自动保存
    */
-  unPublish: function (isAuto) {
+  unPublish: function () {
     var that = this
     that._addDisabled()
     $.ajax({
-      url: latkeConfig.servePath + '/console/article/unpublish/' +
+      url: Label.servePath + '/console/article/unpublish/' +
       admin.article.status.id,
       type: 'PUT',
       cache: false,
       success: function (result, textStatus) {
-        if (isAuto) {
-          $('#tipMsg').text(Label.autoSaveLabel)
-          return
-        }
-
         $('#tipMsg').text(result.msg)
         if (!result.sc) {
           return
@@ -614,19 +560,3 @@ admin.register.article = {
     $('#tipMsg').text(Label.uploadMsg)
   },
 }
-
-function getUUID () {
-  var d = new Date().getTime()
-
-  var ret = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-    function (c) {
-      var r = (d + Math.random() * 16) % 16 | 0
-      d = Math.floor(d / 16)
-      return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16)
-    })
-
-  ret = ret.replace(new RegExp('-', 'g'), '')
-
-  return ret
-}
-

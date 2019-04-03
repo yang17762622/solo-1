@@ -1,7 +1,7 @@
 <#--
 
     Solo - A small and beautiful blogging system written in Java.
-    Copyright (c) 2010-2019, b3log.org & hacpai.com
+    Copyright (c) 2010-present, b3log.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,7 @@
                 <img width="128" src="${staticServePath}/images/logo.png" alt="Solo" title="Solo" />
             </a>
         </div>
-        <div class="fn__left content-reset about__panel" style="margin-left: 20px;">
+        <div class="fn__left vditor-reset about__panel" style="margin-left: 20px;">
             <div id="aboutLatest" class="about-margin fn__left">
                 ${checkingVersionLabel}
             </div>

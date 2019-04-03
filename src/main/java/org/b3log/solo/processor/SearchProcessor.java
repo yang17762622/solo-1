@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -55,7 +55,7 @@ import java.util.Map;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.1.1.2, Jan 5, 2019
+ * @version 1.1.1.3, Mar 19, 2019
  * @since 2.4.0
  */
 @RequestProcessor
@@ -128,7 +128,7 @@ public class SearchProcessor {
     @RequestProcessing(value = "/search", method = HttpMethod.GET)
     public void search(final RequestContext context) {
         final HttpServletRequest request = context.getRequest();
-        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "search.ftl");
+        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "common-template/search.ftl");
         final Map<String, String> langs = langPropsService.getAll(Latkes.getLocale());
         final Map<String, Object> dataModel = renderer.getDataModel();
         dataModel.putAll(langs);
@@ -148,6 +148,8 @@ public class SearchProcessor {
             final JSONObject preference = optionQueryService.getPreference();
 
             dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
             dataModelService.setArticlesExProperties(context, articles, preference);
 
             dataModel.put(Article.ARTICLES, articles);

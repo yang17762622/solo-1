@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -55,18 +55,6 @@ public class TagConsole {
      */
     @Inject
     private TagQueryService tagQueryService;
-
-    /**
-     * Tag management service.
-     */
-    @Inject
-    private TagMgmtService tagMgmtService;
-
-    /**
-     * Language service.
-     */
-    @Inject
-    private LangPropsService langPropsService;
 
     /**
      * Gets all tags.
@@ -146,38 +134,6 @@ public class TagConsole {
             LOGGER.log(Level.ERROR, "Gets unused tags failed", e);
 
             jsonObject.put(Keys.STATUS_CODE, false);
-        }
-    }
-
-    /**
-     * Removes all unused tags.
-     * <p>
-     * Renders the response with a json object, for example,
-     * <pre>
-     * {
-     *     "msg": ""
-     * }
-     * </pre>
-     * </p>
-     *
-     * @param context the specified request context
-     */
-    @Before(ConsoleAdminAuthAdvice.class)
-    public void removeUnusedTags(final RequestContext context) {
-        final JsonRenderer renderer = new JsonRenderer();
-        context.setRenderer(renderer);
-        final JSONObject jsonObject = new JSONObject();
-        renderer.setJSONObject(jsonObject);
-
-        try {
-            tagMgmtService.removeUnusedTags();
-
-            jsonObject.put(Keys.STATUS_CODE, true);
-            jsonObject.put(Keys.MSG, langPropsService.get("removeSuccLabel"));
-        } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Removes unused tags failed", e);
-
-            jsonObject.put(Keys.MSG, langPropsService.get("removeFailLabel"));
         }
     }
 }

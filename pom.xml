@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     Description: Solo POM.
-    Version: 3.18.3.52, Mar 5, 2019
+    Version: 3.18.3.54, Mar 31, 2019
     Author: <a href="http://88250.b3log.org">Liang Ding</a>
     Author: <a href="http://www.annpeter.cn">Ann Peter</a>
     Author: <a href="http://vanessa.b3log.org">Vanessa</a>
@@ -16,7 +16,7 @@
     <artifactId>solo</artifactId>
     <packaging>war</packaging>
     <name>Solo</name>
-    <version>3.2.0</version>
+    <version>3.5.0</version>
     <description>
         一款小而美的博客系统，专为程序员设计。
     </description>
@@ -74,7 +74,7 @@
     </scm>
 
     <properties>
-        <org.b3log.latke.version>2.4.45</org.b3log.latke.version>
+        <org.b3log.latke.version>2.4.49</org.b3log.latke.version>
 
         <slf4j.version>1.7.5</slf4j.version>
         <jsoup.version>1.9.1</jsoup.version>
@@ -302,9 +302,10 @@
                     <includes>
                         <include>**/src/*/java/**/*.java</include>
                         <include>**/src/*/webapp/js/*.js</include>
+                        <include>**/src/*/webapp/scss/*.scss</include>
                         <include>**/src/*/webapp/**/*.ftl</include>
                         <include>**/src/*/webapp/skins/*/js/*.js</include>
-                        <include>**/src/*/webapp/skins/*/css/*.scss</include>
+                        <include>**/src/*/webapp/skins/**/*.scss</include>
                         <include>**/src/*/webapp/skins/**/*.properties</include>
                         <include>**/src/*/webapp/plugins/*/js/*.js</include>
                         <include>**/src/*/webapp/plugins/*/css/*.css</include>
@@ -328,11 +329,12 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                     <mapping>
                         <java>SLASHSTAR_STYLE</java>
+                        <scss>SLASHSTAR_STYLE</scss>
                     </mapping>
                     <useDefaultMapping>true</useDefaultMapping>
                     <properties>
-                        <year>2010-2019</year>
-                        <devTeam>b3log.org &amp; hacpai.com</devTeam>
+                        <year>2010-present</year>
+                        <devTeam>b3log.org</devTeam>
                     </properties>
                     <encoding>UTF-8</encoding>
                 </configuration>

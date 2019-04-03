@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -42,8 +42,6 @@ import org.b3log.solo.util.Emotions;
 import org.b3log.solo.util.Markdowns;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 
 import java.util.Date;
 
@@ -51,7 +49,7 @@ import java.util.Date;
  * Comment management service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.3.3.6, Mar 3, 2019
+ * @version 1.3.4.1, Mar 29, 2019
  * @since 0.3.5
  */
 @Service
@@ -210,10 +208,7 @@ public class CommentMgmtService {
             final String commentURL = requestJSONObject.optString(Comment.COMMENT_URL);
 
             if (!Strings.isURL(commentURL) || StringUtils.contains(commentURL, "<")) {
-                LOGGER.log(Level.WARN, "Comment URL is invalid [{0}]", commentURL);
-                ret.put(Keys.MSG, langPropsService.get("urlInvalidLabel"));
-
-                return ret;
+                requestJSONObject.put(Comment.COMMENT_URL, "");
             }
 
             String commentContent = requestJSONObject.optString(Comment.COMMENT_CONTENT);
@@ -331,7 +326,10 @@ public class CommentMgmtService {
             ret.put(Keys.OBJECT_ID, commentId);
             final String commentSharpURL = Comment.getCommentSharpURLForPage(page, commentId);
             ret.put(Comment.COMMENT_NAME, commentName);
-            ret.put(Comment.COMMENT_CONTENT, commentContent);
+            String cmtContent = Emotions.convert(commentContent);
+            cmtContent = Markdowns.toHTML(cmtContent);
+            cmtContent = Markdowns.clean(cmtContent);
+            ret.put(Comment.COMMENT_CONTENT, cmtContent);
             ret.put(Comment.COMMENT_URL, commentURL);
 
             ret.put(Comment.COMMENT_SHARP_URL, commentSharpURL);
@@ -400,12 +398,9 @@ public class CommentMgmtService {
             final String commentName = requestJSONObject.getString(Comment.COMMENT_NAME);
             final String commentURL = requestJSONObject.optString(Comment.COMMENT_URL);
             final String commentContent = requestJSONObject.getString(Comment.COMMENT_CONTENT);
-
             final String originalCommentId = requestJSONObject.optString(Comment.COMMENT_ORIGINAL_COMMENT_ID);
             ret.put(Comment.COMMENT_ORIGINAL_COMMENT_ID, originalCommentId);
-            // Step 1: Add comment
             final JSONObject comment = new JSONObject();
-
             comment.put(Comment.COMMENT_ORIGINAL_COMMENT_ID, "");
             comment.put(Comment.COMMENT_ORIGINAL_COMMENT_NAME, "");
             comment.put(Comment.COMMENT_NAME, commentName);
@@ -415,18 +410,15 @@ public class CommentMgmtService {
             comment.put(Comment.COMMENT_ORIGINAL_COMMENT_NAME, requestJSONObject.optString(Comment.COMMENT_ORIGINAL_COMMENT_NAME));
             final JSONObject preference = optionQueryService.getPreference();
             final Date date = new Date();
-
             comment.put(Comment.COMMENT_CREATED, date.getTime());
             ret.put(Comment.COMMENT_T_DATE, DateFormatUtils.format(date, "yyyy-MM-dd HH:mm:ss"));
             ret.put("commentDate2", date);
-
             ret.put(Common.COMMENTABLE, preference.getBoolean(Option.ID_C_COMMENTABLE) && article.getBoolean(Article.ARTICLE_COMMENTABLE));
             ret.put(Common.PERMALINK, article.getString(Article.ARTICLE_PERMALINK));
-
             ret.put(Comment.COMMENT_NAME, commentName);
             String cmtContent = Emotions.convert(commentContent);
             cmtContent = Markdowns.toHTML(cmtContent);
-            cmtContent = Jsoup.clean(cmtContent, Whitelist.relaxed());
+            cmtContent = Markdowns.clean(cmtContent);
             ret.put(Comment.COMMENT_CONTENT, cmtContent);
             ret.put(Comment.COMMENT_URL, commentURL);
 
@@ -451,7 +443,6 @@ public class CommentMgmtService {
             comment.put(Comment.COMMENT_ON_ID, articleId);
             comment.put(Comment.COMMENT_ON_TYPE, Article.ARTICLE);
             final String commentId = Ids.genTimeMillisId();
-
             comment.put(Keys.OBJECT_ID, commentId);
             ret.put(Keys.OBJECT_ID, commentId);
             final String commentSharpURL = Comment.getCommentSharpURLForArticle(article, commentId);

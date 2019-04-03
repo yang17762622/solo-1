@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -76,7 +76,7 @@ admin.pluginList = {
         var that = this;
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/plugins/" + pageNum + "/" + Label.PAGE_SIZE + "/" + Label.WINDOW_SIZE,
+            url: Label.servePath + "/console/plugins/" + pageNum + "/" + Label.PAGE_SIZE + "/" + Label.WINDOW_SIZE,
             type: "GET",
             cache: false,
             success: function(result, textStatus) {
@@ -119,7 +119,7 @@ admin.pluginList = {
         };
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/plugin/toSetting",
+            url: Label.servePath + "/console/plugin/toSetting",
             type: "POST",
             cache: false,
             data: JSON.stringify(requestJSONObject),
@@ -148,7 +148,7 @@ admin.pluginList = {
         };
 
         $.ajax({
-            url: latkeConfig.servePath + "/console/plugin/status/",
+            url: Label.servePath + "/console/plugin/status/",
             type: "PUT",
             cache: false,
             data: JSON.stringify(requestJSONObject),

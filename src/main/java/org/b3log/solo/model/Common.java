@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,10 +22,25 @@ package org.b3log.solo.model;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://hacpai.com/member/e">Dongxu Wang</a>
- * @version 1.7.0.3, Feb 27, 2019
+ * @version 1.7.0.5, Mar 29, 2019
  * @since 0.3.1
  */
 public final class Common {
+
+    /**
+     * Key of skin cookie name.
+     */
+    public static final String COOKIE_NAME_SKIN = "skin";
+
+    /**
+     * Key of mobile skin cookie name.
+     */
+    public static final String COOKIE_NAME_MOBILE_SKIN = "mobile-skin";
+
+    /**
+     * Key of favicon URL.
+     */
+    public static final String FAVICON_URL = "faviconURL";
 
     /**
      * Key of URL.

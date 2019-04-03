@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,16 +23,14 @@ import org.b3log.latke.logging.Logger;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.solo.SoloServletListener;
 import org.b3log.solo.model.Option;
-import org.b3log.solo.upgrade.V299_300;
-import org.b3log.solo.upgrade.V300_310;
-import org.b3log.solo.upgrade.V310_320;
+import org.b3log.solo.upgrade.*;
 import org.json.JSONObject;
 
 /**
  * Upgrade service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.1.2, Mar 3, 2019
+ * @version 1.2.1.5, Mar 31, 2019
  * @since 1.2.0
  */
 @Service
@@ -71,6 +69,12 @@ public class UpgradeService {
                     V300_310.perform();
                 case "3.1.0":
                     V310_320.perform();
+                case "3.2.0":
+                    V320_330.perform();
+                case "3.3.0":
+                    V330_340.perform();
+                case "3.4.0":
+                    V340_350.perform();
 
                     break;
                 default:

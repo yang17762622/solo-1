@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -44,7 +44,7 @@ import java.util.Map;
  * Error processor.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.1.8, Mar 4, 2019
+ * @version 1.0.2.0, Mar 30, 2019
  * @since 0.4.5
  */
 @RequestProcessor
@@ -85,7 +85,7 @@ public class ErrorProcessor {
      * @param context the specified context
      * @throws Exception exception
      */
-    @RequestProcessing(value = "/error/{statusCode}", method = HttpMethod.GET)
+    @RequestProcessing(value = "/error/{statusCode}", method = {HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE})
     public void showErrorPage(final RequestContext context) {
         final HttpServletRequest request = context.getRequest();
         final String statusCode = context.pathVar("statusCode");
@@ -101,6 +101,8 @@ public class ErrorProcessor {
                 dataModel.putAll(langs);
                 final JSONObject preference = optionQueryService.getPreference();
                 dataModelService.fillCommon(context, dataModel, preference);
+                dataModelService.fillFaviconURL(dataModel, preference);
+                dataModelService.fillUsite(dataModel);
                 final String msg = (String) context.attr(Keys.MSG);
                 dataModel.put(Keys.MSG, msg);
                 dataModel.put(Common.LOGIN_URL, userQueryService.getLoginURL(Common.ADMIN_INDEX_URI));

@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -36,7 +36,6 @@ import org.b3log.latke.util.Strings;
 import org.b3log.solo.SoloServletListener;
 import org.b3log.solo.model.Article;
 import org.b3log.solo.model.Common;
-import org.b3log.solo.model.Option;
 import org.b3log.solo.model.UserExt;
 import org.b3log.solo.repository.UserRepository;
 import org.json.JSONObject;
@@ -54,7 +53,7 @@ import java.util.ResourceBundle;
  * Solo utilities.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.0.3, Mar 10, 2019
+ * @version 1.8.0.2, Apr 2, 2019
  * @since 2.8.0
  */
 public final class Solos {
@@ -68,16 +67,6 @@ public final class Solos {
      * Favicon API.
      */
     public static final String FAVICON_API;
-
-    /**
-     * Gravatar address.
-     */
-    public static final String GRAVATAR;
-
-    /**
-     * Mobile skin.
-     */
-    public static final String MOBILE_SKIN;
 
     /**
      * Solo User-Agent.
@@ -113,14 +102,6 @@ public final class Solos {
         }
 
         FAVICON_API = solo.getString("faviconAPI");
-        GRAVATAR = solo.getString("gravatar");
-        String mobileSkin = Option.DefaultPreference.DEFAULT_SKIN_DIR_NAME;
-        try {
-            mobileSkin = solo.getString("mobile.skin");
-        } catch (final Exception e) {
-            LOGGER.log(Level.WARN, "Loads [mobile.skin] in solo.props failed [" + e.getMessage() + "], using [" + mobileSkin + "] as the default mobile skin");
-        }
-        MOBILE_SKIN = mobileSkin;
     }
 
     static {
@@ -137,6 +118,17 @@ public final class Solos {
         COOKIE_SECRET = cookieSecret;
 
         COOKIE_HTTP_ONLY = Boolean.valueOf(Latkes.getLocalProperty("cookieHttpOnly"));
+    }
+
+    /**
+     * Gets the current process's id.
+     *
+     * @return the current process's id
+     */
+    public static long currentPID() {
+        final String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+
+        return Long.parseLong(processName.split("@")[0]);
     }
 
     /**

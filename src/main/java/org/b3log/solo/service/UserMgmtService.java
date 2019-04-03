@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,8 @@
  */
 package org.b3log.solo.service;
 
+import jodd.http.HttpRequest;
+import jodd.http.HttpResponse;
 import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
 import org.b3log.latke.Latkes;
@@ -31,9 +33,14 @@ import org.b3log.latke.service.LangPropsService;
 import org.b3log.latke.service.ServiceException;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.latke.util.Strings;
+import org.b3log.solo.model.Common;
+import org.b3log.solo.model.Option;
 import org.b3log.solo.model.UserExt;
 import org.b3log.solo.repository.UserRepository;
+import org.b3log.solo.util.Solos;
 import org.json.JSONObject;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * User management service.
@@ -41,7 +48,7 @@ import org.json.JSONObject;
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://hacpai.com/member/DASHU">DASHU</a>
  * @author <a href="https://github.com/nanolikeyou">nanolikeyou</a>
- * @version 1.1.0.16, Feb 8, 2019
+ * @version 1.1.0.18, Mar 27, 2019
  * @since 0.4.0
  */
 @Service
@@ -82,6 +89,66 @@ public class UserMgmtService {
     private OptionMgmtService optionMgmtService;
 
     /**
+     * Init service.
+     */
+    @Inject
+    private InitService initService;
+
+    /**
+     * Refresh usite. 展示站点连接 https://github.com/b3log/solo/issues/12719
+     */
+    public void refreshUSite() {
+        if (!initService.isInited()) {
+            return;
+        }
+
+        JSONObject admin;
+        try {
+            admin = userRepository.getAdmin();
+        } catch (final Exception e) {
+            return;
+        }
+
+        JSONObject usite;
+        try {
+            final JSONObject requestJSON = new JSONObject().
+                    put(User.USER_NAME, admin.optString(User.USER_NAME)).
+                    put(UserExt.USER_B3_KEY, admin.optString(UserExt.USER_B3_KEY));
+            final HttpResponse res = HttpRequest.post("https://hacpai.com/user/usite").trustAllCerts(true).
+                    connectionTimeout(3000).timeout(7000).header("User-Agent", Solos.USER_AGENT).
+                    body(requestJSON.toString()).send();
+            if (HttpServletResponse.SC_OK != res.statusCode()) {
+                return;
+            }
+            res.charset("UTF-8");
+            final JSONObject result = new JSONObject(res.bodyText());
+            if (0 != result.optInt(Keys.STATUS_CODE)) {
+                return;
+            }
+            usite = result.optJSONObject(Common.DATA);
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Gets usite failed", e);
+
+            return;
+        }
+
+        JSONObject usiteOpt = optionQueryService.getOptionById(Option.ID_C_USITE);
+        if (null == usiteOpt) {
+            usiteOpt = new JSONObject();
+            usiteOpt.put(Keys.OBJECT_ID, Option.ID_C_USITE);
+            usiteOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_HACPAI);
+        }
+        usiteOpt.put(Option.OPTION_VALUE, usite.toString());
+        try {
+            optionMgmtService.addOrUpdateOption(usiteOpt);
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Updates usite option failed", e);
+
+            return;
+        }
+    }
+
+    /**
      * Updates a user by the specified request json object.
      *
      * @param requestJSONObject the specified request json object, for example,
@@ -89,7 +156,8 @@ public class UserMgmtService {
      *                          "userName": "",
      *                          "userRole": "",
      *                          "userURL": "",
-     *                          "userB3Key": ""
+     *                          "userB3Key": "",
+     *                          "userGitHubId": "" // optional
      * @throws ServiceException service exception
      */
     public void updateUser(final JSONObject requestJSONObject) throws ServiceException {
@@ -124,6 +192,11 @@ public class UserMgmtService {
 
             final String userB3Key = requestJSONObject.optString(UserExt.USER_B3_KEY);
             oldUser.put(UserExt.USER_B3_KEY, userB3Key);
+
+            final String userGitHubId = requestJSONObject.optString(UserExt.USER_GITHUB_ID);
+            if (StringUtils.isNotBlank(userGitHubId)) {
+                oldUser.put(UserExt.USER_GITHUB_ID, userGitHubId);
+            }
 
             userRepository.update(oldUserId, oldUser);
             transaction.commit();

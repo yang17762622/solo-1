@@ -1,7 +1,7 @@
 <#--
 
     Solo - A small and beautiful blogging system written in Java.
-    Copyright (c) 2010-2019, b3log.org & hacpai.com
+    Copyright (c) 2010-present, b3log.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -79,7 +79,7 @@
             &nbsp;
             <span id="postToCommunityPanel">
                 <label class="checkbox">
-                    <input id="postToCommunity" type="checkbox" checked="checked" />
+                    <input id="postToCommunity" type="checkbox" />
                     <a href="https://hacpai.com/article/1546941897596" target="_blank">${syncToCommunityLabel}</a>
                 </label>
             </span>

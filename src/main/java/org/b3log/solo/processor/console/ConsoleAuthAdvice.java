@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -44,7 +44,7 @@ public class ConsoleAuthAdvice extends ProcessAdvice {
         final JSONObject currentUser = Solos.getCurrentUser(context.getRequest(), context.getResponse());
         if (null == currentUser) {
             final JSONObject exception401 = new JSONObject();
-            exception401.put(Keys.MSG, "Unauthorized to request [" + context.requestURI() + "]");
+            exception401.put(Keys.MSG, "Unauthorized to request [" + context.requestURI() + "], please signin");
             exception401.put(Keys.STATUS_CODE, HttpServletResponse.SC_UNAUTHORIZED);
 
             throw new RequestProcessAdviceException(exception401);

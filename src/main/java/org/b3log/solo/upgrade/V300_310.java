@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -41,7 +41,7 @@ import java.util.List;
  * Upgrade script from v3.0.0 to v3.1.0.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.1.0, Mar 4, 2019
+ * @version 1.0.1.1, Mar 20, 2019
  * @since 3.1.0
  */
 public final class V300_310 {
@@ -62,12 +62,6 @@ public final class V300_310 {
         final BeanManager beanManager = BeanManager.getInstance();
         final OptionRepository optionRepository = beanManager.getReference(OptionRepository.class);
         final ArticleRepository articleRepository = beanManager.getReference(ArticleRepository.class);
-
-        String serverHost = Latkes.getLatkeProperty("serverHost");
-        if (StringUtils.isBlank(serverHost)) {
-            serverHost = "localhost";
-            Latkes.setLatkeProperty("serverHost", serverHost);
-        }
 
         try {
             Connection connection = Connections.getConnection();
@@ -107,9 +101,6 @@ public final class V300_310 {
             }
 
             transaction.commit();
-
-            LOGGER.log(Level.INFO, "Upgraded from version [3.0.0] to version [3.1.0] successfully, please restart Solo");
-            System.exit(0);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Upgrade failed!", e);
 

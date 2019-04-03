@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.3.0.0, Feb 28, 2019
+ * @version 1.3.0.2, Mar 19, 2019
  */
 
 /* preference 相关操作 */
@@ -33,7 +33,7 @@ admin.preference = {
     $('#tabPreference').tabs()
 
     $.ajax({
-      url: latkeConfig.servePath + '/console/preference/',
+      url: Label.servePath + '/console/preference/',
       type: 'GET',
       cache: false,
       success: function (result, textStatus) {
@@ -72,46 +72,12 @@ admin.preference = {
           val(preference.randomArticlesDisplayCount)
         $('#customVars').val(preference.customVars)
 
-        'true' === preference.enableArticleUpdateHint ? $(
-          '#enableArticleUpdateHint').attr('checked', 'checked') : $(
-          '#enableArticleUpdateHint').removeAttr('checked')
-        'true' === preference.allowVisitDraftViaPermalink ? $(
-          '#allowVisitDraftViaPermalink').attr('checked', 'checked') : $(
-          'allowVisitDraftViaPermalink').removeAttr('checked')
-        'true' === preference.commentable ? $('#commentable').
-          attr('checked', 'checked') : $('commentable').removeAttr('checked')
+        'true' === preference.enableArticleUpdateHint ? $('#enableArticleUpdateHint').attr('checked', 'checked') : $('#enableArticleUpdateHint').removeAttr('checked')
+        'true' === preference.allowVisitDraftViaPermalink ? $('#allowVisitDraftViaPermalink').attr('checked', 'checked') : $('allowVisitDraftViaPermalink').removeAttr('checked')
+        'true' === preference.commentable ? $('#commentable').attr('checked', 'checked') : $('commentable').removeAttr('checked')
+        'true' === preference.syncGitHub ? $('#syncGitHub').attr('checked', 'checked') : $('syncGitHub').removeAttr('checked')
 
         admin.preference.locale = preference.localeString
-
-        // skin
-        $('#skinMain').data('skinDirName', preference.skinDirName)
-        var skins = eval('(' + preference.skins + ')')
-        var skinsHTML = ''
-        for (var i = 0; i < skins.length; i++) {
-          var selectedClass = ''
-          if (skins[i].skinName === preference.skinName
-            && skins[i].skinDirName === preference.skinDirName) {
-            selectedClass += ' selected'
-          }
-          skinsHTML += '<div class="fn__left skinItem' + selectedClass +
-            '"><div class="ft__center">' +
-            skins[i].skinName
-            + '</div><img class="skinPreview" src="'
-            + latkeConfig.staticServePath + '/skins/' + skins[i].skinDirName
-            + '/preview.png"/><div><button class="update small" data-name="' +
-            skins[i].skinDirName + '">' + Label.enableLabel +
-            '</button><button class="small" onclick="window.open(\'' + latkeConfig.servePath +
-            '?skin=' + skins[i].skinName + '\')">'
-            + Label.previewLabel + '</button></div></div>'
-        }
-        $('#skinMain').append(skinsHTML + '<div class=\'fn__clear\'></div>')
-
-        $('.skinItem .update').click(function () {
-          $('.skinItem').removeClass('selected')
-          $(this).closest('.skinItem').addClass('selected')
-          $('#skinMain').data('skinDirName', $(this).data('name'))
-          admin.preference.update()
-        })
 
         // sign
         var signs = eval('(' + preference.signs + ')')
@@ -120,8 +86,10 @@ admin.preference = {
         }
 
         $('#articleListDisplay').val(preference.articleListStyle)
+        $('#hljsTheme').val(preference.hljsTheme)
         $('#feedOutputMode').val(preference.feedOutputMode)
         $('#feedOutputCnt').val(preference.feedOutputCnt)
+        $('#faviconURL').val(preference.faviconURL)
 
         $('#loadMsg').text('')
       },
@@ -235,7 +203,6 @@ admin.preference = {
         'articleListDisplayCount': $('#articleListDisplayCount').val(),
         'articleListPaginationWindowSize': $(
           '#articleListPaginationWindowSize').val(),
-        'skinDirName': $('#skinMain').data('skinDirName'),
         'localeString': $('#localeString').val(),
         'timeZoneId': $('#timeZoneId').val(),
         'noticeBoard': $('#noticeBoard').val(),
@@ -252,15 +219,18 @@ admin.preference = {
         'allowVisitDraftViaPermalink': $('#allowVisitDraftViaPermalink').
           prop('checked'),
         'articleListStyle': $('#articleListDisplay').val(),
+        'hljsTheme': $('#hljsTheme').val(),
         'feedOutputMode': $('#feedOutputMode').val(),
         'feedOutputCnt': $('#feedOutputCnt').val(),
+        'faviconURL': $('#faviconURL').val(),
+        'syncGitHub': $('#syncGitHub').prop('checked'),
         'commentable': $('#commentable').prop('checked'),
         'customVars': $('#customVars').val(),
       },
     }
 
     $.ajax({
-      url: latkeConfig.servePath + '/console/preference/',
+      url: Label.servePath + '/console/preference/',
       type: 'PUT',
       cache: false,
       data: JSON.stringify(requestJSONObject),

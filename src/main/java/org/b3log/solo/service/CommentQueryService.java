@@ -1,6 +1,6 @@
 /*
  * Solo - A small and beautiful blogging system written in Java.
- * Copyright (c) 2010-2019, b3log.org & hacpai.com
+ * Copyright (c) 2010-present, b3log.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -52,7 +52,7 @@ import java.util.List;
  * Comment query service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.3.2.4, Jan 15, 2019
+ * @version 1.3.2.6, Mar 17, 2019
  * @since 0.3.5
  */
 @Service
@@ -194,7 +194,7 @@ public class CommentQueryService {
                 String commentContent = comment.optString(Comment.COMMENT_CONTENT);
                 commentContent = Emotions.convert(commentContent);
                 commentContent = Markdowns.toHTML(commentContent);
-                commentContent = Jsoup.clean(commentContent, Whitelist.relaxed());
+                commentContent = Markdowns.clean(commentContent);
                 comment.put(Comment.COMMENT_CONTENT, commentContent);
 
                 String commentName = comment.optString(Comment.COMMENT_NAME);
@@ -254,7 +254,7 @@ public class CommentQueryService {
                 String commentContent = comment.optString(Comment.COMMENT_CONTENT);
                 commentContent = Emotions.convert(commentContent);
                 commentContent = Markdowns.toHTML(commentContent);
-                commentContent = Jsoup.clean(commentContent, Whitelist.relaxed());
+                commentContent = Markdowns.clean(commentContent);
                 comment.put(Comment.COMMENT_CONTENT, commentContent);
 
                 String commentName = comment.optString(Comment.COMMENT_NAME);
